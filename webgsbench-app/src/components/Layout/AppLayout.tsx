@@ -62,6 +62,20 @@ export function AppLayout() {
     metricsB.recordFrame(deltaTime);
   };
 
+  const handleClearA = () => {
+    setFileA(null);
+    setViewerA(null);
+    metricsA.reset();
+    imageQuality.reset(); // Reset quality comparison when either file changes
+  };
+
+  const handleClearB = () => {
+    setFileB(null);
+    setViewerB(null);
+    metricsB.reset();
+    imageQuality.reset(); // Reset quality comparison when either file changes
+  };
+
   const handleClearAll = () => {
     setFileA(null);
     setFileB(null);
@@ -139,12 +153,23 @@ export function AppLayout() {
         <div className="flex-1 flex relative">
           {/* Splat A */}
           <div className="flex-1 relative" style={{ borderRight: '1px solid #444' }}>
-            <div className="absolute top-4 left-4 z-20 px-3 py-2 bg-gray-800 bg-opacity-90 rounded-lg max-w-[280px]">
-              <div className="text-xs font-semibold text-gray-400 mb-0.5">Splat A</div>
+            <div className="absolute top-4 left-4 z-20 flex gap-2 items-start max-w-[280px]">
+              <div className="px-3 py-2 bg-gray-800 bg-opacity-90 rounded-lg flex-1">
+                <div className="text-xs font-semibold text-gray-400 mb-0.5">Splat A</div>
+                {fileA && (
+                  <div className="text-sm text-white truncate" title={fileA.name}>
+                    {fileA.name}
+                  </div>
+                )}
+              </div>
               {fileA && (
-                <div className="text-sm text-white truncate" title={fileA.name}>
-                  {fileA.name}
-                </div>
+                <button
+                  onClick={handleClearA}
+                  className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
+                  title="Change file for Splat A"
+                >
+                  Change
+                </button>
               )}
             </div>
             {!fileA ? (
@@ -165,12 +190,23 @@ export function AppLayout() {
 
           {/* Splat B */}
           <div className="flex-1 relative">
-            <div className="absolute top-4 left-4 z-20 px-3 py-2 bg-gray-800 bg-opacity-90 rounded-lg max-w-[280px]">
-              <div className="text-xs font-semibold text-gray-400 mb-0.5">Splat B</div>
+            <div className="absolute top-4 left-4 z-20 flex gap-2 items-start max-w-[280px]">
+              <div className="px-3 py-2 bg-gray-800 bg-opacity-90 rounded-lg flex-1">
+                <div className="text-xs font-semibold text-gray-400 mb-0.5">Splat B</div>
+                {fileB && (
+                  <div className="text-sm text-white truncate" title={fileB.name}>
+                    {fileB.name}
+                  </div>
+                )}
+              </div>
               {fileB && (
-                <div className="text-sm text-white truncate" title={fileB.name}>
-                  {fileB.name}
-                </div>
+                <button
+                  onClick={handleClearB}
+                  className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
+                  title="Change file for Splat B"
+                >
+                  Change
+                </button>
               )}
             </div>
             {!fileB ? (
