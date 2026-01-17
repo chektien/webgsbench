@@ -59,6 +59,14 @@ export function useImageQuality() {
       console.log('Viewer A available:', !!viewerA);
       console.log('Viewer B available:', !!viewerB);
 
+      // Log camera position/distance for correlation analysis
+      if (viewerA?.camera?.position) {
+        const pos = viewerA.camera.position;
+        const distance = Math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
+        console.log(`Camera distance from origin: ${distance.toFixed(2)} units`);
+        console.log(`Camera position: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`);
+      }
+
       // Wait a bit for rendering to stabilize
       await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -95,6 +103,37 @@ export function useImageQuality() {
 
       samplePixels(imageDataA, 'Canvas A');
       samplePixels(imageDataB, 'Canvas B');
+
+      // Calculate pixel difference statistics
+      let totalDiff = 0;
+      let maxDiff = 0;
+      let pixelsDifferent = 0;
+      const threshold = 5; // Consider pixels different if any channel differs by >5
+
+      for (let i = 0; i < imageDataA.data.length; i += 4) {
+        const diffR = Math.abs(imageDataA.data[i] - imageDataB.data[i]);
+        const diffG = Math.abs(imageDataA.data[i + 1] - imageDataB.data[i + 1]);
+        const diffB = Math.abs(imageDataA.data[i + 2] - imageDataB.data[i + 2]);
+        const pixelDiff = Math.max(diffR, diffG, diffB);
+        
+        totalDiff += diffR + diffG + diffB;
+        maxDiff = Math.max(maxDiff, pixelDiff);
+        
+        if (pixelDiff > threshold) {
+          pixelsDifferent++;
+        }
+      }
+
+      const totalPixels = imageDataA.data.length / 4;
+      const avgDiff = totalDiff / (totalPixels * 3);
+      const percentDifferent = (pixelsDifferent / totalPixels) * 100;
+
+      console.log('Pixel difference statistics:', {
+        avgDiff: avgDiff.toFixed(2),
+        maxDiff,
+        percentDifferent: percentDifferent.toFixed(1) + '%',
+        resolution: `${imageDataA.width}x${imageDataA.height}`
+      });
 
       console.log('Calculating PSNR...');
       const psnr = calculatePSNR(imageDataA, imageDataB);
