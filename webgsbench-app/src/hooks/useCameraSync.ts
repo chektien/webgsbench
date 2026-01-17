@@ -1,31 +1,31 @@
 import { useEffect } from 'react';
-import type * as GaussianSplats3D from '@mkkellogg/gaussian-splats-3d';
+import type { SparkViewerContext } from '../types';
 
 interface CameraSyncOptions {
-  sourceViewer: GaussianSplats3D.Viewer | null;
-  targetViewer: GaussianSplats3D.Viewer | null;
+  sourceContext: SparkViewerContext | null;
+  targetContext: SparkViewerContext | null;
   enabled: boolean;
 }
 
 /**
  * Synchronize camera movement from source viewer to target viewer
  * @param options - Configuration for camera sync
- * @param options.sourceViewer - The viewer to copy camera from (usually Splat A)
- * @param options.targetViewer - The viewer to sync camera to (usually Splat B)
+ * @param options.sourceContext - The viewer context to copy camera from (usually Splat A)
+ * @param options.targetContext - The viewer context to sync camera to (usually Splat B)
  * @param options.enabled - Whether sync is enabled
  */
-export function useCameraSync({ sourceViewer, targetViewer, enabled }: CameraSyncOptions) {
+export function useCameraSync({ sourceContext, targetContext, enabled }: CameraSyncOptions) {
   useEffect(() => {
-    if (!sourceViewer || !targetViewer || !enabled) {
+    if (!sourceContext || !targetContext || !enabled) {
       return;
     }
 
     // Function to copy camera state from source to target
     const syncCamera = () => {
-      const sourceCamera = sourceViewer.camera;
-      const targetCamera = targetViewer.camera;
-      const sourceControls = sourceViewer.controls;
-      const targetControls = targetViewer.controls;
+      const sourceCamera = sourceContext.camera;
+      const targetCamera = targetContext.camera;
+      const sourceControls = sourceContext.controls;
+      const targetControls = targetContext.controls;
 
       // Copy camera position
       targetCamera.position.copy(sourceCamera.position);
@@ -41,7 +41,7 @@ export function useCameraSync({ sourceViewer, targetViewer, enabled }: CameraSyn
     };
 
     // Listen to source controls change event
-    sourceViewer.controls.addEventListener('change', syncCamera);
+    sourceContext.controls.addEventListener('change', syncCamera);
 
     // Perform initial sync
     syncCamera();
@@ -50,8 +50,8 @@ export function useCameraSync({ sourceViewer, targetViewer, enabled }: CameraSyn
 
     // Cleanup: remove event listener
     return () => {
-      sourceViewer.controls.removeEventListener('change', syncCamera);
+      sourceContext.controls.removeEventListener('change', syncCamera);
       console.log('Camera sync disabled');
     };
-  }, [sourceViewer, targetViewer, enabled]);
+  }, [sourceContext, targetContext, enabled]);
 }

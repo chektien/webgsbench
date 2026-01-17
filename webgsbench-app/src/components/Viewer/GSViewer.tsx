@@ -1,84 +1,190 @@
 import { useEffect, useRef } from 'react';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useGSLoader } from '../../hooks/useGSLoader';
-import type { GSFile } from '../../types';
-import type * as GaussianSplats3D from '@mkkellogg/gaussian-splats-3d';
+import type { GSFile, SparkViewerContext } from '../../types';
 
 interface GSViewerProps {
   gsFile: GSFile | null;
   onLoadComplete?: (loadTime: number, splatCount: number) => void;
   onFrameUpdate?: (deltaTime: number) => void;
-  onViewerReady?: (viewer: GaussianSplats3D.Viewer) => void;
+  onViewerReady?: (context: SparkViewerContext) => void;
 }
 
 export function GSViewer({ gsFile, onLoadComplete, onFrameUpdate, onViewerReady }: GSViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { viewer, loading, error, splatCount, loadProgress, loadFile, cleanup } = useGSLoader();
+  const contextRef = useRef<SparkViewerContext | null>(null);
+  const frameIdRef = useRef<number | null>(null);
+  const lastFrameTimeRef = useRef<number>(0);
 
+  const { splatMesh, loading, error, loadProgress, loadFile, cleanup } = useGSLoader();
+
+  // Setup Three.js scene and load splat
   useEffect(() => {
-    if (gsFile && containerRef.current) {
-      loadFile(gsFile, containerRef.current, (loadTime) => {
-        if (onLoadComplete) {
-          onLoadComplete(loadTime, splatCount);
-        }
-      });
-    }
+    if (!gsFile || !containerRef.current) return;
 
+    const container = containerRef.current;
+    
+    // Create renderer
+    const renderer = new THREE.WebGLRenderer({
+      antialias: false, // Spark recommends false for performance
+      preserveDrawingBuffer: true, // Required for quality metrics capture
+    });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    // Create scene
+    const scene = new THREE.Scene();
+    scene.background = null; // Use default Spark background
+
+    // Create camera
+    const camera = new THREE.PerspectiveCamera(
+      60, // FOV
+      container.clientWidth / container.clientHeight,
+      0.1,
+      1000
+    );
+    camera.position.set(0, 0, 5); // Start closer to splat
+    camera.up.set(0, -1, 0); // Flip Y-axis for correct orientation
+
+    // Create controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.target.set(0, 0, 0);
+    controls.update();
+
+    // Create viewer context
+    const forceRender = () => {
+      renderer.render(scene, camera);
+      const gl = renderer.getContext();
+      gl.flush();
+    };
+
+    const context: SparkViewerContext = {
+      scene,
+      camera,
+      renderer,
+      controls,
+      splatMesh: null,
+      canvas: renderer.domElement,
+      forceRender,
+    };
+
+    contextRef.current = context;
+
+    // Load the splat file
+    loadFile(gsFile, (loadTime, splatCount) => {
+      if (onLoadComplete) {
+        onLoadComplete(loadTime, splatCount);
+      }
+    });
+
+    // Handle window resize
+    const handleResize = () => {
+      if (!container) return;
+      
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
     return () => {
+      window.removeEventListener('resize', handleResize);
+      
+      if (frameIdRef.current !== null) {
+        cancelAnimationFrame(frameIdRef.current);
+      }
+      
+      controls.dispose();
+      renderer.dispose();
+      
+      if (container.contains(renderer.domElement)) {
+        container.removeChild(renderer.domElement);
+      }
+      
       cleanup();
+      contextRef.current = null;
     };
   }, [gsFile]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Notify parent when viewer is ready
+  // Add splat mesh to scene when loaded
   useEffect(() => {
-    if (viewer && onViewerReady) {
-      onViewerReady(viewer);
+    if (!splatMesh || !contextRef.current) return;
+
+    const context = contextRef.current;
+    context.scene.add(splatMesh);
+    context.splatMesh = splatMesh;
+
+    console.log('SplatMesh added to scene');
+
+    // Notify parent that viewer is ready
+    if (onViewerReady) {
+      onViewerReady(context);
     }
-  }, [viewer, onViewerReady]);
 
-  // Frame timing - measure frame intervals (time between frames)
-  // This is the correct approach for measuring real rendering performance
-  // because WebGL render calls are asynchronous (GPU work happens later)
+    return () => {
+      if (context.scene && splatMesh) {
+        context.scene.remove(splatMesh);
+      }
+    };
+  }, [splatMesh, onViewerReady]);
+
+  // Render loop
   useEffect(() => {
-    if (!viewer || !onFrameUpdate) return;
+    if (!contextRef.current || !splatMesh) return;
 
-    let frameId: number;
-    let lastFrameTime = performance.now();
+    const context = contextRef.current;
+    lastFrameTimeRef.current = performance.now();
 
-    const renderLoop = () => {
+    const animate = () => {
       const currentTime = performance.now();
-      const frameInterval = currentTime - lastFrameTime;
-      
-      // Update viewer state (camera, controls, etc.)
-      viewer.update();
-      
-      // Render the scene (this queues GPU commands, doesn't wait for completion)
-      viewer.render();
-      
-      // Report the frame interval as frame time
-      // This represents the actual time between frames, which includes
-      // all rendering work from the previous frame
-      onFrameUpdate(frameInterval);
-      
-      lastFrameTime = currentTime;
-      frameId = requestAnimationFrame(renderLoop);
+      const frameInterval = currentTime - lastFrameTimeRef.current;
+
+      // Update controls
+      context.controls.update();
+
+      // Render scene
+      context.renderer.render(context.scene, context.camera);
+
+      // Report frame time
+      if (onFrameUpdate) {
+        onFrameUpdate(frameInterval);
+      }
+
+      lastFrameTimeRef.current = currentTime;
+      frameIdRef.current = requestAnimationFrame(animate);
     };
 
-    frameId = requestAnimationFrame(renderLoop);
-    return () => cancelAnimationFrame(frameId);
-  }, [viewer, onFrameUpdate]);
+    frameIdRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (frameIdRef.current !== null) {
+        cancelAnimationFrame(frameIdRef.current);
+        frameIdRef.current = null;
+      }
+    };
+  }, [splatMesh, onFrameUpdate]);
 
   return (
     <div
       className="bg-gray-900"
       style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
     >
-      {/* Viewer container - ONLY the viewer canvas goes here */}
+      {/* Viewer container */}
       <div
         ref={containerRef}
         style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
       />
 
-      {/* UI overlays as siblings - safe from innerHTML='' */}
+      {/* Loading UI */}
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-95" style={{ zIndex: 10 }}>
           <div className="text-center max-w-md px-12">
@@ -106,6 +212,7 @@ export function GSViewer({ gsFile, onLoadComplete, onFrameUpdate, onViewerReady 
         </div>
       )}
 
+      {/* Error UI */}
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-95" style={{ zIndex: 10 }}>
           <div className="bg-red-900 bg-opacity-50 border border-red-600 rounded-xl p-8 max-w-md mx-4">
@@ -120,6 +227,7 @@ export function GSViewer({ gsFile, onLoadComplete, onFrameUpdate, onViewerReady 
         </div>
       )}
 
+      {/* No file loaded */}
       {!gsFile && !loading && !error && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 10 }}>
           <div className="text-gray-400 text-lg">No file loaded</div>

@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
-import * as GaussianSplats3D from '@mkkellogg/gaussian-splats-3d';
+import { SplatMesh, SplatFileType } from '@sparkjsdev/spark';
 import type { GSFile } from '../types';
 
 export function useGSLoader() {
-  const [viewer, setViewer] = useState<GaussianSplats3D.Viewer | null>(null);
+  const [splatMesh, setSplatMesh] = useState<SplatMesh | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [splatCount, setSplatCount] = useState(0);
@@ -11,13 +11,12 @@ export function useGSLoader() {
 
   const loadFile = useCallback(async (
     gsFile: GSFile,
-    container: HTMLElement,
-    onLoadComplete?: (loadTime: number) => void
+    onLoadComplete?: (loadTime: number, splatCount: number) => void
   ) => {
-    // Dispose of any existing viewer first
-    if (viewer) {
-      viewer.dispose();
-      setViewer(null);
+    // Dispose of any existing mesh first
+    if (splatMesh) {
+      splatMesh.dispose();
+      setSplatMesh(null);
     }
 
     setLoading(true);
@@ -25,152 +24,97 @@ export function useGSLoader() {
     setLoadProgress(0);
     const startTime = performance.now();
 
-    // Helper to hide library's default UI elements
-    const hideLibraryUI = (rootElement: HTMLElement) => {
-      const messageDivs = rootElement.querySelectorAll('div');
-      messageDivs.forEach((div) => {
-        const text = div.textContent?.toLowerCase() || '';
-        if (text.includes('loading') || text.includes('processing') || div.className.includes('loading')) {
-          div.style.display = 'none';
-        }
-      });
-    };
+    // Map file format to SplatFileType enum (outside try/catch for error logging)
+    let fileType: SplatFileType | undefined = undefined;
+    if (gsFile.format === '.ply') {
+      fileType = SplatFileType.PLY;
+    } else if (gsFile.format === '.splat') {
+      fileType = SplatFileType.SPLAT;
+    } else if (gsFile.format === '.ksplat') {
+      fileType = SplatFileType.KSPLAT;
+    } else if (gsFile.format === '.spz') {
+      fileType = SplatFileType.SPZ;
+    }
 
     try {
-      // Don't wait for container dimensions - just create viewer
-      // We'll fix the canvas size after loading
-      const newViewer = new GaussianSplats3D.Viewer({
-        cameraUp: [0, -1, 0], // Flip Y axis to fix inverted view
-        initialCameraPosition: [10, 10, 50], // Much farther away
-        initialCameraLookAt: [0, 0, 0],
-        sharedMemoryForWorkers: false,
-        enableSplatMeshHover: false, // Disable raycasting to prevent stack overflow
-        ignoreDevicePixelRatio: false,
-        selfDrivenMode: false, // We'll drive the render loop manually for accurate timing
+      // Read file as ArrayBuffer
+      const arrayBuffer = await gsFile.file.arrayBuffer();
+      const fileBytes = new Uint8Array(arrayBuffer);
+
+      // Create SplatMesh with fileBytes and fileType
+      const mesh = new SplatMesh({
+        fileBytes,
+        fileType,
+        fileName: gsFile.file.name,
       });
 
-      // Mount viewer to container
-      container.innerHTML = '';
-      container.appendChild(newViewer.rootElement);
+      // Set up progress tracking during initialization
+      let lastProgress = 0;
+      const progressInterval = setInterval(() => {
+        // Estimate progress based on time (rough approximation)
+        lastProgress = Math.min(lastProgress + 0.1, 0.95);
+        setLoadProgress(lastProgress);
+      }, 100);
 
-      // Hide any default loading UI elements from the library
-      hideLibraryUI(newViewer.rootElement);
-
-      // Get canvas and check its size
-      const canvas = newViewer.rootElement.querySelector('canvas') as HTMLCanvasElement;
-      if (canvas) {
-        const rect = canvas.getBoundingClientRect();
-        console.log('Canvas natural size:', rect.width, 'x', rect.height);
-        console.log('Canvas position in viewport:', rect);
-
-        // Check parent chain
-        console.log('Canvas parent (rootElement):', newViewer.rootElement.getBoundingClientRect());
-        console.log('Container:', container.getBoundingClientRect());
-        let el: HTMLElement | null = container;
-        let depth = 0;
-        while (el && depth < 5) {
-          const computedPosition = window.getComputedStyle(el).position;
-          console.log(`  Parent ${depth}:`, el.className, `position: ${computedPosition}`, el.getBoundingClientRect());
-          el = el.parentElement;
-          depth++;
-        }
-      }
-
-      // Create object URL from file
-      const url = URL.createObjectURL(gsFile.file);
-
-      // Map file format to SceneFormat enum
-      const formatMap: Record<string, any> = {
-        '.ply': GaussianSplats3D.SceneFormat.Ply,
-        '.splat': GaussianSplats3D.SceneFormat.Splat,
-        '.ksplat': GaussianSplats3D.SceneFormat.KSplat,
-        '.spz': GaussianSplats3D.SceneFormat.Spz,
-      };
-
-      const sceneFormat = formatMap[gsFile.format];
-
-      // Add the scene with the GS file and explicit format
-      try {
-        await newViewer.addSplatScene(url, {
-          format: sceneFormat,
-          splatAlphaRemovalThreshold: 5,
-          showLoadingUI: false, // Use our own loading UI instead
-          position: [0, 0, 0],
-          rotation: [0, 0, 0, 1],
-          scale: [1, 1, 1],
-          onProgress: (progress: number, message: string) => {
-            // Progress comes as 0-100, convert to 0-1 for state
-            const normalizedProgress = Math.min(Math.max(progress, 0), 100) / 100;
-            setLoadProgress(normalizedProgress);
-            console.log(`Loading: ${Math.round(progress)}% - ${message}`);
-          },
-        });
-      } catch (loadError) {
-        // Clean up viewer on load error
-        newViewer.dispose();
-        URL.revokeObjectURL(url);
-
-        // Provide helpful error message for .ksplat format issues
-        if (gsFile.format === '.ksplat') {
-          const formatError = new Error(
-            `Failed to load ${gsFile.format} file. ` +
-            `This may be due to incompatible .ksplat format variant. ` +
-            `Try converting with a different tool or use .splat or .spz format instead.`
-          );
-          (formatError as any).originalError = loadError;
-          throw formatError;
-        }
-        throw loadError;
-      }
-
-      // Don't call start() - we're in manual mode (selfDrivenMode: false)
-      // The parent component will drive the render loop
+      // Wait for initialization to complete
+      await mesh.initialized;
+      
+      // Clear progress interval
+      clearInterval(progressInterval);
+      setLoadProgress(1);
 
       // Get splat count
-      const scene = newViewer.splatMesh.scenes[0];
-      const count = scene ? scene.splatBuffer.getSplatCount() : 0;
+      const count = mesh.numSplats;
       setSplatCount(count);
-
       console.log('Scene loaded with', count, 'splats');
 
-      // Hide any UI elements that appeared during loading
-      hideLibraryUI(newViewer.rootElement);
-
-      // Check canvas size after loading
-      if (canvas) {
-        const finalRect = canvas.getBoundingClientRect();
-        console.log('Canvas final size:', finalRect.width, 'x', finalRect.height);
-        console.log('Canvas should now be visible - try dragging to rotate');
-      }
-
-      // Clean up object URL after everything is loaded
-      URL.revokeObjectURL(url);
-
-      setViewer(newViewer);
+      setSplatMesh(mesh);
       const loadTime = performance.now() - startTime;
 
       if (onLoadComplete) {
-        onLoadComplete(loadTime);
+        onLoadComplete(loadTime, count); // Pass splat count to callback
       }
     } catch (e) {
-      console.error('Failed to load GS file:', e);
-      setError(e as Error);
+      // Log detailed error information
+      const error = e as Error;
+      console.error('Failed to load GS file:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        format: gsFile.format,
+        fileName: gsFile.file.name,
+        fileSize: gsFile.file.size,
+        fileType: fileType,
+      });
+      
+      // Provide helpful error message for .ksplat format issues
+      if (gsFile.format === '.ksplat') {
+        const formatError = new Error(
+          `Failed to load ${gsFile.format} file. ` +
+          `This may be due to incompatible .ksplat format variant. ` +
+          `Try converting with a different tool or use .splat or .spz format instead.`
+        );
+        (formatError as any).originalError = e;
+        setError(formatError);
+      } else {
+        setError(error);
+      }
     } finally {
       setLoading(false);
     }
-  }, [viewer]);
+  }, [splatMesh]);
 
   const cleanup = useCallback(() => {
-    setViewer((currentViewer) => {
-      if (currentViewer) {
-        currentViewer.dispose();
+    setSplatMesh((currentMesh) => {
+      if (currentMesh) {
+        currentMesh.dispose();
       }
       return null;
     });
   }, []);
 
   return {
-    viewer,
+    splatMesh,
     loading,
     error,
     splatCount,

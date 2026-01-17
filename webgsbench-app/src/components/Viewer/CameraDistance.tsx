@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import type * as GaussianSplats3D from '@mkkellogg/gaussian-splats-3d';
+import type { SparkViewerContext } from '../../types';
 
 interface CameraDistanceProps {
-  viewer: GaussianSplats3D.Viewer | null;
+  context: SparkViewerContext | null;
   sceneName?: string;
 }
 
@@ -10,18 +10,18 @@ interface CameraDistanceProps {
  * Displays the current camera distance from the scene center
  * Shows color-coded guidelines for standardized evaluation distances
  */
-export function CameraDistance({ viewer, sceneName }: CameraDistanceProps) {
+export function CameraDistance({ context }: CameraDistanceProps) {
   const [distance, setDistance] = useState<number>(0);
 
   useEffect(() => {
-    if (!viewer) {
+    if (!context) {
       setDistance(0);
       return;
     }
 
     // Update distance every 100ms
     const interval = setInterval(() => {
-      const position = viewer.camera.position;
+      const position = context.camera.position;
       const dist = Math.sqrt(
         position.x * position.x + 
         position.y * position.y + 
@@ -31,9 +31,9 @@ export function CameraDistance({ viewer, sceneName }: CameraDistanceProps) {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [viewer]);
+  }, [context]);
 
-  if (!viewer || distance === 0) {
+  if (!context || distance === 0) {
     return null;
   }
 

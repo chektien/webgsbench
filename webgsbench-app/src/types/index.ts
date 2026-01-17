@@ -1,3 +1,7 @@
+import type * as THREE from 'three';
+import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import type { SplatMesh } from '@sparkjsdev/spark';
+
 export interface BenchmarkMetrics {
   fps: number;
   frameTime: number; // ms
@@ -28,4 +32,27 @@ export interface ImageQualityMetrics {
   ssim: number | null; // 0-1 scale - higher is better
   capturedAt: string | null; // ISO timestamp
   error: string | null;
+}
+
+/**
+ * Configuration options for SparkViewer
+ */
+export interface SparkViewerOptions {
+  preserveDrawingBuffer?: boolean;  // Default: true for quality metrics
+  controlsType?: 'orbit' | 'spark'; // Default: 'orbit'
+  initialCameraDistance?: number;   // Default: 5
+}
+
+/**
+ * Viewer context returned by SparkViewer
+ * Replaces the old GaussianSplats3D.Viewer
+ */
+export interface SparkViewerContext {
+  scene: THREE.Scene;
+  camera: THREE.PerspectiveCamera;
+  renderer: THREE.WebGLRenderer;
+  controls: OrbitControls;
+  splatMesh: SplatMesh | null;
+  canvas: HTMLCanvasElement;
+  forceRender: () => void; // For quality metrics capture
 }

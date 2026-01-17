@@ -3,14 +3,16 @@
  * Implements PSNR (Peak Signal-to-Noise Ratio) and SSIM (Structural Similarity Index)
  */
 
+import type { SparkViewerContext } from '../../types';
+
 /**
  * Captures a WebGL canvas to ImageData by reading pixels directly from WebGL context
  * This works even with preserveDrawingBuffer: false by forcing a render immediately before capture
  * @param canvas - The WebGL canvas to capture
- * @param viewer - The GaussianSplats3D viewer instance to force render
+ * @param context - The SparkViewerContext to force render
  * @returns ImageData containing the canvas pixels
  */
-export function captureCanvas(canvas: HTMLCanvasElement, viewer?: any): Promise<ImageData> {
+export function captureCanvas(canvas: HTMLCanvasElement, context?: SparkViewerContext | null): Promise<ImageData> {
   return new Promise<ImageData>((resolve, reject) => {
     // Capture in the next frame when rendering has occurred
     requestAnimationFrame(() => {
@@ -21,13 +23,10 @@ export function captureCanvas(canvas: HTMLCanvasElement, viewer?: any): Promise<
           return;
         }
 
-        // Force a render RIGHT BEFORE readPixels if viewer is available
-        if (viewer) {
+        // Force a render RIGHT BEFORE readPixels if context is available
+        if (context) {
           console.log('Forcing render before capture...');
-          viewer.update();
-          viewer.render();
-          // Ensure GPU commands complete before reading pixels
-          gl.flush();
+          context.forceRender();
         }
 
         const width = canvas.width;

@@ -1,21 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { GSFile } from '../../types';
+import type { GSFile, SparkViewerContext } from '../../types';
 import { FileDropzone } from '../FileLoader/FileDropzone';
 import { GSViewer } from '../Viewer/GSViewer';
 import { CameraDistance } from '../Viewer/CameraDistance';
 import { MetricsPanel } from '../Metrics/MetricsPanel';
-import { Toast } from '../UI/Toast';
+// import { Toast } from '../UI/Toast'; // TODO: Implement toast notifications
 import { useMetrics } from '../../hooks/useMetrics';
 import { useImageQuality } from '../../hooks/useImageQuality';
 import { useCameraSync } from '../../hooks/useCameraSync';
-import type * as GaussianSplats3D from '@mkkellogg/gaussian-splats-3d';
 
 export function AppLayout() {
   const [fileA, setFileA] = useState<GSFile | null>(null);
   const [fileB, setFileB] = useState<GSFile | null>(null);
-  const [viewerA, setViewerA] = useState<GaussianSplats3D.Viewer | null>(null);
-  const [viewerB, setViewerB] = useState<GaussianSplats3D.Viewer | null>(null);
-  const [cameraSyncEnabled, setCameraSyncEnabled] = useState(true);
+  const [contextA, setContextA] = useState<SparkViewerContext | null>(null);
+  const [contextB, setContextB] = useState<SparkViewerContext | null>(null);
+  const [cameraSyncEnabled] = useState(true); // TODO: Add UI control to toggle
 
   const metricsA = useMetrics();
   const metricsB = useMetrics();
@@ -23,9 +22,9 @@ export function AppLayout() {
 
   // Camera sync: Splat B follows Splat A
   useCameraSync({
-    sourceViewer: viewerA,
-    targetViewer: viewerB,
-    enabled: cameraSyncEnabled && !!viewerA && !!viewerB,
+    sourceContext: contextA,
+    targetContext: contextB,
+    enabled: cameraSyncEnabled && !!contextA && !!contextB,
   });
 
   const handleFileSelectA = (file: GSFile) => {
@@ -40,7 +39,7 @@ export function AppLayout() {
 
   // Auto-trigger quality comparison when both files are loaded
   useEffect(() => {
-    if (fileA && fileB && viewerA && viewerB && !imageQuality.isComparing && imageQuality.metrics.psnr === null) {
+    if (fileA && fileB && contextA && contextB && !imageQuality.isComparing && imageQuality.metrics.psnr === null) {
       // Small delay to ensure viewers are fully rendered
       const timer = setTimeout(() => {
         console.log('=== Auto-triggering Quality Comparison ===');
@@ -50,26 +49,28 @@ export function AppLayout() {
           console.warn('⚠️ WARNING: Both viewers loaded the SAME FILE!');
           console.warn('PSNR/SSIM will be perfect (identical images)');
         }
-        imageQuality.compareQuality(viewerA, viewerB);
+        imageQuality.compareQuality(contextA, contextB);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [fileA, fileB, viewerA, viewerB, imageQuality.isComparing, imageQuality.metrics.psnr]);
+  }, [fileA, fileB, contextA, contextB, imageQuality.isComparing, imageQuality.metrics.psnr]);
 
-  const handleViewerReadyA = useCallback((viewer: GaussianSplats3D.Viewer) => {
-    setViewerA(viewer);
+  const handleContextReadyA = useCallback((context: SparkViewerContext) => {
+    setContextA(context);
   }, []);
 
-  const handleViewerReadyB = useCallback((viewer: GaussianSplats3D.Viewer) => {
-    setViewerB(viewer);
+  const handleContextReadyB = useCallback((context: SparkViewerContext) => {
+    setContextB(context);
   }, []);
 
   const handleLoadCompleteA = (loadTime: number, splatCount: number) => {
+    console.log('handleLoadCompleteA:', { loadTime, splatCount, fileSize: fileA?.size });
     metricsA.setLoadTime(loadTime);
     metricsA.setFileInfo(fileA?.size || 0, splatCount);
   };
 
   const handleLoadCompleteB = (loadTime: number, splatCount: number) => {
+    console.log('handleLoadCompleteB:', { loadTime, splatCount, fileSize: fileB?.size });
     metricsB.setLoadTime(loadTime);
     metricsB.setFileInfo(fileB?.size || 0, splatCount);
   };
@@ -94,14 +95,14 @@ export function AppLayout() {
 
   const handleClearA = () => {
     setFileA(null);
-    setViewerA(null);
+    setContextA(null);
     metricsA.reset();
     imageQuality.reset(); // Reset quality comparison when either file changes
   };
 
   const handleClearB = () => {
     setFileB(null);
-    setViewerB(null);
+    setContextB(null);
     metricsB.reset();
     imageQuality.reset(); // Reset quality comparison when either file changes
   };
@@ -109,8 +110,8 @@ export function AppLayout() {
   const handleClearAll = () => {
     setFileA(null);
     setFileB(null);
-    setViewerA(null);
-    setViewerB(null);
+    setContextA(null);
+    setContextB(null);
     metricsA.reset();
     metricsB.reset();
     imageQuality.reset();
@@ -245,7 +246,7 @@ export function AppLayout() {
                 gsFile={fileA}
                 onLoadComplete={handleLoadCompleteA}
                 onFrameUpdate={handleFrameUpdateA}
-                onViewerReady={handleViewerReadyA}
+                onViewerReady={handleContextReadyA}
               />
             )}
           </div>
@@ -287,7 +288,7 @@ export function AppLayout() {
                 gsFile={fileB}
                 onLoadComplete={handleLoadCompleteB}
                 onFrameUpdate={handleFrameUpdateB}
-                onViewerReady={handleViewerReadyB}
+                onViewerReady={handleContextReadyB}
               />
             )}
           </div>
@@ -304,7 +305,7 @@ export function AppLayout() {
                 </div>
               </div>
               {/* Camera distance display - shows for Splat A (primary viewer) */}
-              <CameraDistance viewer={viewerA} />
+              <CameraDistance context={contextA} />
             </div>
           )}
         </div>
