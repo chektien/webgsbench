@@ -206,11 +206,32 @@ export function calculateSSIM(imageA: ImageData, imageB: ImageData): number {
   const sigmaA = Math.sqrt(varA);
   const sigmaB = Math.sqrt(varB);
 
+  // Debug: Log SSIM components
+  console.log('SSIM calculation details:', {
+    meanA: meanA.toFixed(2),
+    meanB: meanB.toFixed(2),
+    varA: varA.toFixed(2),
+    varB: varB.toFixed(2),
+    covAB: covAB.toFixed(2),
+    sigmaA: sigmaA.toFixed(2),
+    sigmaB: sigmaB.toFixed(2),
+  });
+
   // SSIM formula
   const numerator = (2 * meanA * meanB + C1) * (2 * covAB + C2);
   const denominator = (meanA * meanA + meanB * meanB + C1) * (varA + varB + C2);
 
-  return numerator / denominator;
+  const ssim = numerator / denominator;
+  
+  console.log('SSIM components:', {
+    C1: C1.toFixed(2),
+    C2: C2.toFixed(2),
+    numerator: numerator.toFixed(2),
+    denominator: denominator.toFixed(2),
+    ssim: ssim.toFixed(6)
+  });
+
+  return ssim;
 }
 
 /**

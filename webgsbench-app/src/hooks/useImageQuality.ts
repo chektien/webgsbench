@@ -48,6 +48,14 @@ export function useImageQuality() {
         throw new Error('Found the same canvas twice! Cannot compare.');
       }
 
+      console.log('Canvas comparison:', {
+        sameCanvas: canvasA === canvasB,
+        canvasAId: canvasA.id || 'no-id',
+        canvasBId: canvasB.id || 'no-id',
+        canvasAElement: canvasA,
+        canvasBElement: canvasB
+      });
+
       // Validate same resolution
       if (canvasA.width !== canvasB.width || canvasA.height !== canvasB.height) {
         throw new Error(
@@ -132,8 +140,16 @@ export function useImageQuality() {
         avgDiff: avgDiff.toFixed(2),
         maxDiff,
         percentDifferent: percentDifferent.toFixed(1) + '%',
-        resolution: `${imageDataA.width}x${imageDataA.height}`
+        resolution: `${imageDataA.width}x${imageDataA.height}`,
+        totalPixels
       });
+
+      // WARNING: If avgDiff is 0, images are identical!
+      if (avgDiff === 0) {
+        console.warn('⚠️ WARNING: Images are IDENTICAL (avgDiff = 0)!');
+        console.warn('This likely means both canvases captured the same viewer.');
+        console.warn('Check that canvasA and canvasB are different elements.');
+      }
 
       console.log('Calculating PSNR...');
       const psnr = calculatePSNR(imageDataA, imageDataB);
