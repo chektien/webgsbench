@@ -1,0 +1,74 @@
+% Add this section after "Related Systems and Differentiation" (around line 321)
+% Replace or insert before "Potential Challenges and Solutions"
+
+\section{Scene Selection and Evaluation Methodology}
+
+\subsection{Phenomenon-Driven Scene Curation}
+
+Our objective is not to benchmark datasets or establish method rankings, but to examine how Web-based execution conditions influence the perceptual and systems-level behavior of 3D Gaussian Splatting during interactive use. We therefore adopt a \textbf{curated, phenomenon-driven scene selection strategy}, drawing scenes from multiple widely used datasets rather than relying on a single benchmark.
+
+Each selected scene is chosen to isolate a specific rendering or perceptual stress factor relevant to browser-mediated execution, including memory pressure, depth complexity, temporal stability, and sensitivity to high-frequency detail. By curating scenes across diverse sources, we avoid overfitting our analysis to the characteristics of any single dataset and instead focus on behaviors that consistently emerge under Web deployment constraints.
+
+We emphasize that our selection does not aim for exhaustive dataset coverage or statistical representativeness. Instead, \textbf{each scene functions as a measurement probe} designed to reveal failure modes and trade-offs that are obscured by conventional offline evaluation pipelines. This design enables focused, interpretable analysis of how scene properties interact with Web-specific execution constraints.
+
+\subsection{Curated Scene Portfolio}
+
+Table~\ref{tab:scene-selection} presents our curated scene portfolio. Each scene is selected to isolate a specific stress factor:
+
+\begin{table*}[t]
+	\caption{Curated scenes and evaluation rationale. Each scene isolates a specific stress factor relevant to browser-mediated 3DGS execution.}
+	\label{tab:scene-selection}
+	\small
+	\begin{tabular}{@{}llp{3cm}p{2.5cm}p{5cm}c@{}}
+		\toprule
+		\textbf{Scene} & \textbf{Dataset}                            & \textbf{Characteristics}    & \textbf{Stress Factor} & \textbf{Relevance to Web-3DGS}                                                               & \textbf{Size} \\
+		\midrule
+		bonsai         & Mip-NeRF 360~\cite{barron2022mipnerf360}    & Indoor object, fine foliage & High-freq. detail      & Tests compression artifacts on complex texture; small file ideal for mobile                  & 56 MB         \\
+		\addlinespace
+		garden         & Mip-NeRF 360                                & Outdoor, vegetation, depth  & Depth complexity       & Exposes sorting artifacts during camera motion; mid-range memory footprint                   & 98 MB         \\
+		\addlinespace
+		playroom       & Deep Blending~\cite{hedman2018deepblending} & Indoor room, multi-object   & Memory footprint       & Stresses GPU memory limits; tests browser tab stability under load                           & 453 MB        \\
+		\addlinespace
+		truck          & Tanks \& Temples~\cite{knapitsch2017tanks}  & Outdoor vehicle, specular   & Temporal stability     & Reveals frame drops during interaction; high splat count challenges real-time sorting        & 400 MB        \\
+		\addlinespace
+		train          & Tanks \& Temples                            & Large outdoor, geometric    & Load time              & Tests parsing and upload overhead; extreme case for network-constrained deployment           & 175 MB        \\
+		\addlinespace
+		flower         & Real-world capture                          & Small, thin geometry        & Compression sens.      & Exposes quality degradation in aggressive formats (.spz); thin structures prone to artifacts & 6 MB          \\
+		\bottomrule
+	\end{tabular}
+\end{table*}
+
+\textbf{Stress Factor Coverage.} Our selection ensures orthogonal coverage of Web-specific failure modes:
+
+\begin{itemize}
+	\item \textbf{High-frequency detail} (bonsai, flower): Compression algorithms struggle with fine texture, producing visible artifacts
+	\item \textbf{Depth complexity} (garden, train): Large depth range increases splats per pixel, causing GPU overdraw
+	\item \textbf{Memory footprint} (playroom, truck): Browsers have strict memory limits; large scenes risk tab crashes
+	\item \textbf{Temporal stability} (truck, train): Camera motion triggers splat reordering, causing frame drops
+	\item \textbf{Load time} (train, playroom): Large files incur parsing overhead, critical for 4G network deployment
+	\item \textbf{Compression sensitivity} (flower, bonsai): Thin geometry and fine detail suffer from quantization errors
+\end{itemize}
+
+\subsection{Cross-Dataset Justification}
+
+Using scenes from four different datasets (Mip-NeRF 360, Tanks \& Temples, Deep Blending, real-world captures) is essential to avoid dataset-specific biases. Single-dataset benchmarks risk mistaking dataset characteristics for fundamental algorithmic behavior. For example:
+
+\begin{itemize}
+	\item \textbf{Mip-NeRF 360} is biased toward indoor, well-lit scenes with bounded geometry
+	\item \textbf{Tanks \& Temples} emphasizes outdoor, texture-rich environments
+	\item \textbf{Deep Blending} provides complex indoor scenes with challenging lighting
+\end{itemize}
+
+By selecting scenes across multiple datasets, we ensure our findings reflect Web deployment realities rather than dataset-specific artifacts. Each scene serves as a \textbf{controlled probe} for a specific failure mode, enabling interpretable analysis of format-browser-hardware interactions.
+
+\subsection{Scene Size and Complexity Distribution}
+
+Our selection spans three size categories:
+
+\begin{itemize}
+	\item \textbf{Small} (<100 MB): bonsai (56 MB), flower (6 MB) -- Test quality degradation under compression
+	\item \textbf{Medium} (100-200 MB): garden (98 MB), train (175 MB) -- Test parsing overhead and progressive loading
+	\item \textbf{Large} (>200 MB): playroom (453 MB), truck (400 MB) -- Stress browser memory limits
+\end{itemize}
+
+This distribution ensures coverage of mobile-friendly files (flower, bonsai), desktop-targeted content (playroom, truck), and intermediate cases that test the boundaries of Web deployment feasibility.

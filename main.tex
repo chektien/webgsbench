@@ -1,0 +1,448 @@
+\documentclass[acmtog]{acmart}
+
+% Remove copyright box for submission
+\setcopyright{none}
+\settopmatter{printacmref=false}
+
+% Packages
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{hyperref}
+
+% Title and authors
+\title{WebGSBench: An Accessible Benchmarking System for Web-Based Gaussian Splatting Deployment}
+
+\author{Anonymous Submission}
+\affiliation{%
+  \institution{Anonymous for Review}
+  \city{Anonymous}
+  \country{Anonymous}
+}
+
+\begin{abstract}
+While 3D Gaussian Splatting (3DGS) is advancing rapidly in reconstruction quality and compression efficiency, the graphics community lacks standardized tools to evaluate how these algorithms perform under web deployment constraints, where format fragmentation, browser heterogeneity, and hardware diversity create fundamentally different challenges than desktop evaluation. We present \textbf{WebGSBench}, a benchmarking framework for systematic evaluation of 3DGS under web-specific conditions. Our system measures: (1) perceptual quality degradation across web formats, (2) performance characteristics across browsers, and (3) temporal stability during interaction, a quality dimension invisible to static image metrics. Through experiments on standard benchmark scenes, we reveal trade-offs and failure modes that existing evaluation pipelines cannot capture. Code and data are publicly available.
+\end{abstract}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The rapid adoption of 3D Gaussian Splatting~\cite{kerbl2023gaussian} has fundamentally changed the landscape of real-time novel view synthesis. Unlike previous neural rendering approaches that require expensive volumetric ray marching~\cite{mildenhall2020nerf}, 3DGS achieves real-time rendering through efficient point-based splatting, making it particularly suitable for web-based applications.
+
+\textbf{Web deployment has become a primary consumption mode for 3DGS content.} E-commerce platforms leverage 3DGS for hyper-realistic product visualization, offering customers immersive experiences without specialized software. Cultural heritage organizations use web-based 3DGS viewers to democratize access to digitized artifacts. Photogrammetry platforms (Polycam~\cite{polycam2024}, Scaniverse, KIRI Engine) enable millions of users to capture and share 3DGS models directly from mobile devices, with processing and viewing handled entirely in the browser. The New York Times R\&D deployed 3DGS for immersive journalism~\cite{nytimes2024gaussiansplatting}. Industry adoption extends to digital twins, virtual tours, and WebXR experiences, with major cloud providers highlighting 3DGS as a transformative technology for web-scale 3D content delivery~\cite{aws2024gaussiansplatting}.
+
+Despite this widespread web deployment, the research community currently lacks a unified framework for evaluating how novel 3DGS algorithms perform under web constraints, where file size limitations, browser heterogeneity, and hardware diversity create fundamentally different challenges than offline rendering.
+
+This gap between academic development and practical deployment has led to several critical issues:
+
+\begin{enumerate}
+	\item \textbf{Inconsistent Evaluation}: Papers report quality metrics (PSNR, SSIM, LPIPS~\cite{zhang2018perceptual}) on desktop implementations but ignore web-specific constraints
+	\item \textbf{Format Fragmentation}: At least 5+ incompatible formats (.ply, .splat, .ksplat, .spz, compressed variants) exist with no systematic comparison~\cite{playcanvas2024compression,niantic2024spz}
+	\item \textbf{Non-Reproducible Comparisons}: Researchers lack standardized test scenes and evaluation protocols for web deployment
+	\item \textbf{Missing Performance Metrics}: Loading time, memory footprint, and browser-specific rendering performance are rarely reported
+\end{enumerate}
+
+We argue that addressing these gaps requires not just a dataset, but a \textbf{living benchmarking system}. This is analogous to how Papers with Code~\cite{paperswithcode} transformed machine learning reproducibility, or how the KITTI benchmark~\cite{geiger2012kitti} standardized autonomous driving evaluation.
+
+\section{Background and Related Work}
+
+\subsection{Evolution of Neural Rendering and 3D Gaussian Splatting}
+
+\textbf{Neural Radiance Fields (NeRF)}~\cite{mildenhall2020nerf} introduced the paradigm of learning continuous scene representations via volumetric rendering and neural networks. While achieving photorealistic novel view synthesis, NeRF's volumetric rendering approach requires dense sampling along each ray, making real-time rendering infeasible and limiting practical deployment.
+
+\textbf{3D Gaussian Splatting}~\cite{kerbl2023gaussian} addressed this limitation by representing scenes as collections of 3D Gaussians with learnable parameters (position, covariance, opacity, spherical harmonic coefficients). By leveraging differentiable point-based rasterization, 3DGS achieves:
+\begin{itemize}
+	\item Real-time rendering ($\geq$30 fps at 1080p resolution)
+	\item Explicit scene representation enabling faster training
+	\item Compatibility with standard graphics pipelines
+\end{itemize}
+
+The real-time capability of 3DGS has triggered explosive research growth, with numerous extensions addressing dynamic scenes, sparse input views, compression, and relighting.
+
+\subsection{Existing Benchmarking Efforts}
+
+\textbf{Traditional NeRF/3DGS Benchmarks} focus primarily on reconstruction quality:
+\begin{itemize}
+	\item \textbf{Mip-NeRF 360}~\cite{barron2022mipnerf360}: 9 scenes with outdoor/indoor captures, evaluated on PSNR/SSIM/LPIPS
+	\item \textbf{Tanks and Temples}~\cite{knapitsch2017tanks}: Multi-view stereo benchmark adapted for NeRF evaluation
+	\item \textbf{DTU}~\cite{jensen2014large}: Controlled captures with ground truth geometry
+\end{itemize}
+
+These benchmarks established quality evaluation standards but do not address web deployment concerns.
+
+\textbf{Recent Compression \& Efficiency Benchmarks}:
+\begin{itemize}
+	\item \textbf{Splatwizard}~\cite{splatwizard2024}: Unified toolkit for evaluating 3DGS compression methods, measuring file size, rendering FPS, and quality metrics. However, it focuses on offline compression pipelines rather than web-native evaluation.
+	\item \textbf{GS-QA}~\cite{gsqa2025}: Comprehensive quality assessment analyzing 18 objective metrics across diverse scenes. Lacks performance and deployment evaluation.
+	\item \textbf{SIGGRAPH Asia 2025 3DGS Challenge}~\cite{siggraphasia2025challenge}: Focuses on reconstruction speed ($<$60s) and PSNR, not web deployment.
+\end{itemize}
+
+\textbf{Web Viewer Implementations} (not benchmarks):
+\begin{itemize}
+	\item antimatter15/splat~\cite{antimatter2023splat}: WebGL viewer with CPU sorting
+	\item mkkellogg/GaussianSplats3D~\cite{kellogg2023gaussiansplats3d}: Three.js with GPU-based sorting
+	\item cvlab-epfl/gaussian-splatting-web~\cite{cvlab2024webgpu}: WebGPU implementation
+\end{itemize}
+
+These viewers demonstrate feasibility but lack standardized evaluation protocols or comparative analysis across formats and rendering backends.
+
+\subsection{Format Landscape and Fragmentation}
+
+The 3DGS ecosystem has fragmented into multiple incompatible formats, each optimizing for different trade-offs, as shown in Table~\ref{tab:formats}.
+
+\begin{table}[htbp]
+	\caption{3D Gaussian Splatting web format comparison}
+	\label{tab:formats}
+	\small
+	\begin{tabular}{@{}llp{3.2cm}@{}}
+		\toprule
+		Format         & Size         & Features              \\
+		\midrule
+		PLY            & 1.0$\times$  & Full SH, uncompressed \\
+		Compressed PLY & 0.25$\times$ & Quantized, trimmed SH \\
+		.splat         & 0.4$\times$  & No SH, simplified     \\
+		.ksplat        & Var.         & Compression levels    \\
+		.spz           & 0.1$\times$  & 64B/splat, SH kept    \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\textbf{Critical Problem}: Research papers typically report results on .ply files evaluated offline, but web deployment requires format conversion with poorly understood quality-performance trade-offs. No systematic study compares how novel 3DGS algorithms degrade across different web formats.
+
+\subsection{The Dataset Contribution Model}
+
+Highly-cited benchmark papers in computer vision typically provide:
+\begin{enumerate}
+	\item \textbf{Standardized Data}: Curated, diverse, and challenging (ImageNet~\cite{deng2009imagenet}, COCO~\cite{lin2014coco}, KITTI~\cite{geiger2012kitti})
+	\item \textbf{Evaluation Protocols}: Metrics, splits, and comparison methodology
+	\item \textbf{Leaderboards/Infrastructure}: Tools for reproducible comparison
+	\item \textbf{Community Adoption}: Becomes the de facto standard
+\end{enumerate}
+
+Examples include ImageNet~\cite{deng2009imagenet} (14M images, 100k+ citations), COCO~\cite{lin2014coco} (object detection/segmentation benchmark, 50k+ citations), and ScanNet~\cite{dai2017scannet} (indoor RGB-D dataset with reconstruction benchmarks, 5k+ citations).
+
+\subsection{Benchmarking Systems as Research Infrastructure}
+
+Beyond passive datasets, several influential papers have contributed \textbf{active benchmarking systems} that fundamentally advanced their fields through standardized evaluation infrastructure.
+
+\textbf{3D Reconstruction Benchmarks}: Tanks and Temples~\cite{knapitsch2017tanks} provided not just multi-view stereo data, but an online evaluation server with standardized metrics and public leaderboards, enabling fair comparison of reconstruction algorithms. Similarly, ETH3D~\cite{schoeps2017eth3d} combined high-precision laser-scanned ground truth with an automated evaluation platform that computes accuracy, completeness, and F1 scores. This established reproducible protocols that advanced the field. These systems became de facto standards because they provided \textit{infrastructure}, not just data.
+
+\textbf{Embodied AI Platforms}: Habitat~\cite{savva2019habitat} exemplifies how evaluation systems drive research progress. By providing a fast simulator (10,000+ fps), standardized tasks, and reproducible environments, Habitat enabled the embodied AI community to iterate rapidly and compare methods fairly. The platform's impact stems from reducing evaluation friction. Researchers can submit agents and receive immediate, comparable performance metrics.
+
+\textbf{Performance Benchmarking}: MLPerf~\cite{mattson2020mlperf} demonstrates how standardized evaluation infrastructure can establish industry-wide standards. Beyond datasets, MLPerf provides reference implementations, measurement protocols, and leaderboards that enable objective comparison of ML systems across hardware and software configurations.
+
+\textbf{Critical Pattern}: These highly-cited benchmarking papers share common elements: (1) standardized evaluation protocols, (2) automated measurement infrastructure, (3) online platforms for comparison, and (4) open-source tools for reproducibility. Their impact comes not from data collection, but from \textit{lowering the barrier to fair, reproducible comparison}.
+
+\textbf{The Gap for Web-Based 3DGS}: Despite 3DGS's real-time capability making it ideal for web deployment, \textit{no analogous benchmarking system exists} for evaluating web-based performance. Researchers developing novel 3DGS methods have no standardized way to assess how their algorithms perform when deployed to browsers, compressed to web formats, or rendered on diverse hardware. This infrastructure gap limits the field's ability to optimize for real-world deployment.
+
+Our proposed system extends this model of benchmarking infrastructure to web-based 3DGS evaluation, providing researchers with automated tools to submit outputs and receive comprehensive deployment metrics. This is analogous to how Tanks and Temples standardized 3D reconstruction evaluation and MLPerf standardized ML performance benchmarking.
+
+\section{Motivation: The Web Deployment Gap}
+
+\subsection{Why Web-Based Evaluation Matters}
+
+\textbf{Real-World Consumption Pattern}: Web-based deployment represents a significant mode of 3DGS content consumption:
+\begin{itemize}
+	\item E-commerce 3D product visualization (Amazon, Shopify)
+	\item Virtual tours and digital twins (real estate, museums)
+	\item AR/VR experiences via WebXR
+	\item Photogrammetry sharing platforms (Scaniverse, Polycam)
+\end{itemize}
+
+\textbf{Web Constraints Differ Fundamentally from Desktop}:
+\begin{enumerate}
+	\item \textbf{File Size}: Network bandwidth limitations favor 10--100$\times$ compression
+	\item \textbf{Memory}: Mobile browsers have strict memory limits (often $<$4GB)
+	\item \textbf{API Variability}: WebGL 2.0 vs WebGPU performance varies drastically
+	\item \textbf{Browser Diversity}: Chrome, Safari, Firefox have different optimization characteristics
+	\item \textbf{Hardware Range}: From high-end desktop GPUs to integrated mobile GPUs
+\end{enumerate}
+
+\textbf{Current Research Gap}: 95\%+ of 3DGS papers evaluate only on desktop with .ply files, ignoring the conversion/compression pipeline required for web deployment. This creates a ``reproducibility crisis'' for practitioners attempting to deploy academic methods.
+
+\subsection{Fragmentation Hinders Progress}
+
+\textbf{Format Incompatibility}: Converting a novel sparse-view 3DGS method to .spz format may destroy the quality gains reported in the paper. Researchers currently have no way to know without manual implementation and testing.
+
+\textbf{Non-Standard Evaluation}: Different papers use different:
+\begin{itemize}
+	\item Test scenes (Mip-NeRF 360 vs custom captures)
+	\item Quality metrics (some report LPIPS, others don't)
+	\item Performance metrics (FPS on NVIDIA A100 vs RTX 3090)
+	\item Rendering implementations (CUDA vs WebGL vs WebGPU)
+\end{itemize}
+
+This makes it \textbf{impossible to fairly compare} methods across papers.
+
+\subsection{What's Missing: A Unified Benchmarking System}
+
+Drawing inspiration from successful benchmarking systems in adjacent fields:
+
+\textbf{MLPerf}~\cite{mlperf} (ML performance benchmarking):
+\begin{itemize}
+	\item Standardized model implementations
+	\item Hardware-agnostic measurement protocols
+	\item Automated submission and validation
+	\item Public leaderboards
+\end{itemize}
+
+\textbf{Hugging Face Spaces}~\cite{huggingface} (ML model deployment):
+\begin{itemize}
+	\item Unified interface for model comparison
+	\item Interactive visualization
+	\item Reproducible environment
+\end{itemize}
+
+\textbf{Our Proposed System} combines these ideas for 3DGS:
+\begin{enumerate}
+	\item \textbf{Standardized Test Scenes}: Curated dataset spanning diverse scene types, complexity levels, and capture conditions
+	\item \textbf{Multi-Format Pipeline}: Automated conversion to all major web formats with quality/size reporting
+	\item \textbf{Web-Native Evaluation}: Performance profiling across WebGL/WebGPU, multiple browsers, and devices
+	\item \textbf{Interactive Comparison}: Side-by-side visualization of quality-performance trade-offs
+	\item \textbf{Automated Metrics}: PSNR, SSIM, LPIPS, file size, load time, FPS, memory footprint
+	\item \textbf{Researcher-Friendly Submission}: Upload .ply $\rightarrow$ receive comprehensive benchmark report
+\end{enumerate}
+
+\section{Research Impact and Community Value}
+
+\subsection{Enabling Reproducible Research}
+
+By providing a standardized platform, we enable:
+\begin{itemize}
+	\item \textbf{Fair Comparison}: All methods evaluated on identical test scenes, formats, and rendering conditions
+	\item \textbf{Reproducibility}: Researchers can verify claims by submitting their outputs
+	\item \textbf{Transparency}: Public metrics and visualizations reveal true deployment trade-offs
+\end{itemize}
+
+This addresses the reproducibility crisis identified in recent ML/CV meta-research~\cite{pineau2021improving}.
+
+\subsection{Accelerating Algorithm Development}
+
+\textbf{Feedback Loop}: Currently, researchers spend weeks implementing web deployment to test their methods. Our system provides instant feedback, accelerating iteration cycles.
+
+\textbf{Multi-Objective Optimization}: Researchers can simultaneously optimize for:
+\begin{itemize}
+	\item Visual quality (PSNR/SSIM/LPIPS)
+	\item File size (.ply $\rightarrow$ .spz conversion efficiency)
+	\item Rendering performance (FPS across devices)
+	\item Loading time (critical for UX)
+\end{itemize}
+
+\textbf{Identifying Failure Modes}: Automated testing across formats may reveal degradation patterns invisible in desktop evaluation.
+
+\subsection{Bridging Academia and Industry}
+
+Industry practitioners currently struggle to:
+\begin{enumerate}
+	\item \textbf{Select Methods}: Which 3DGS variant works best for their use case?
+	\item \textbf{Predict Performance}: Will this method meet our 60 FPS target on mobile?
+	\item \textbf{Deployment Guidance}: Which format should we use for our constraints?
+\end{enumerate}
+
+Our benchmark provides evidence-based answers, increasing the real-world impact of academic research.
+
+\subsection{Driving Standardization}
+
+Similar to how COCO metrics became the de facto standard for object detection, our benchmark can:
+\begin{itemize}
+	\item Establish standard web deployment metrics
+	\item Encourage format convergence or interoperability
+	\item Inform development of future web standards (WebGPU features, compression APIs)
+\end{itemize}
+
+\section{Proposed Contributions}
+
+Our system makes the following novel contributions:
+
+\subsection{Infrastructure Contributions}
+\begin{enumerate}
+	\item \textbf{Curated Test Dataset}: Diverse, challenging scenes with ground truth for reproducible evaluation
+	\item \textbf{Automated Benchmarking Pipeline}: End-to-end conversion, rendering, and metric computation
+	\item \textbf{Web-Based Comparison Interface}: Interactive visualization of quality-performance trade-offs, including arena-style anonymous A/B comparison for perceptual assessment
+	\item \textbf{Open-Source Toolkit}: Extensible codebase for community-driven improvement
+\end{enumerate}
+
+\subsection{Scientific Contributions}
+\begin{enumerate}
+	\item \textbf{Comprehensive Format Study}: First systematic comparison of 3DGS web formats across quality/performance axes
+	\item \textbf{Deployment Performance Characterization}: Profiling across browsers, devices, and rendering backends
+	\item \textbf{Compression Trade-off Analysis}: Quantifying quality degradation vs file size for different 3DGS variants
+	\item \textbf{Best Practices}: Evidence-based guidelines for web deployment of 3DGS content
+\end{enumerate}
+
+\subsection{Community Impact}
+\begin{enumerate}
+	\item \textbf{Reproducible Comparisons}: Researchers can verify and compare methods objectively
+	\item \textbf{Lower Barrier to Entry}: Newcomers can quickly understand format/deployment landscape
+	\item \textbf{Industry Adoption}: Practitioners gain confidence in deploying academic methods
+	\item \textbf{Future-Proofing}: Extensible system can incorporate new formats and metrics as the field evolves
+\end{enumerate}
+
+\section{Related Systems and Differentiation}
+
+\subsection{Machine Learning Benchmarks}
+
+\textbf{Papers with Code}~\cite{paperswithcode} provides leaderboards for ML tasks but:
+\begin{itemize}
+	\item Relies on author-reported metrics (not automated)
+	\item Doesn't provide deployment/inference benchmarking
+	\item \textit{Our system}: Automated evaluation with web-specific metrics
+\end{itemize}
+
+\textbf{Hugging Face Spaces}~\cite{huggingface} enables model deployment but:
+\begin{itemize}
+	\item Focuses on NLP/vision models, not 3D rendering
+	\item No standardized performance benchmarking
+	\item \textit{Our system}: Standardized 3DGS-specific evaluation
+\end{itemize}
+
+\subsection{3D Vision Benchmarks}
+
+\textbf{ScanNet/Matterport3D}~\cite{dai2017scannet} provide datasets but:
+\begin{itemize}
+	\item Focus on RGB-D reconstruction, not novel view synthesis
+	\item No rendering performance evaluation
+	\item \textit{Our system}: Neural rendering quality + web deployment performance
+\end{itemize}
+
+\textbf{KITTI/Waymo}~\cite{geiger2012kitti} for autonomous driving:
+\begin{itemize}
+	\item Excellent model but domain-specific
+	\item \textit{Our system}: Adapts multi-metric, leaderboard-driven approach to 3DGS
+\end{itemize}
+
+\subsection{Graphics Performance Benchmarks}
+
+\textbf{GFXBench/3DMark} measure GPU performance but:
+\begin{itemize}
+	\item Use fixed synthetic workloads
+	\item Not relevant to neural rendering
+	\item \textit{Our system}: Real 3DGS content with scientifically meaningful metrics
+\end{itemize}
+
+\section{Methodology}
+
+\subsection{Scene Selection Strategy}
+
+Our objective is not to benchmark datasets or establish method rankings, but to examine how Web-based execution conditions influence the perceptual and systems-level behavior of 3D Gaussian Splatting during interactive use. We therefore adopt a \textbf{curated, phenomenon-driven scene selection strategy}, drawing scenes from multiple widely used datasets rather than relying on a single benchmark.
+
+Each selected scene is chosen to isolate a specific rendering or perceptual stress factor relevant to browser-mediated execution, including memory pressure, depth complexity, temporal stability, and sensitivity to high-frequency detail. By curating scenes across diverse sources, we avoid overfitting our analysis to the characteristics of any single dataset and instead focus on behaviors that consistently emerge under Web deployment constraints.
+
+We emphasize that our selection does not aim for exhaustive dataset coverage or statistical representativeness. Instead, \textbf{each scene functions as a measurement probe} designed to reveal failure modes and trade-offs that are obscured by conventional offline evaluation pipelines.
+
+\subsection{Curated Scene Portfolio}
+
+Table~\ref{tab:scene-selection} presents our curated scene portfolio. We selected six scenes from four datasets, each isolating a specific Web-relevant stress factor:
+
+\begin{table*}[t]
+	\caption{Curated scenes and evaluation rationale. Each scene isolates a specific stress factor relevant to browser-mediated 3DGS execution.}
+	\label{tab:scene-selection}
+	\small
+	\begin{tabular}{@{}llp{2.8cm}p{2.2cm}p{4.8cm}c@{}}
+		\toprule
+		\textbf{Scene} & \textbf{Dataset}                            & \textbf{Characteristics}    & \textbf{Stress Factor} & \textbf{Relevance to Web-3DGS}                                              & \textbf{Size} \\
+		\midrule
+		bonsai         & Mip-NeRF 360~\cite{barron2022mipnerf360}    & Indoor object, fine foliage & High-freq. detail      & Tests compression artifacts on complex texture; small file ideal for mobile & 56 MB         \\
+		\addlinespace
+		garden         & Mip-NeRF 360                                & Outdoor, vegetation, depth  & Depth complexity       & Exposes sorting artifacts during camera motion; mid-range memory            & 98 MB         \\
+		\addlinespace
+		playroom       & Deep Blending~\cite{hedman2018deepblending} & Indoor room, multi-object   & Memory footprint       & Stresses GPU memory limits; tests browser tab stability under load          & 453 MB        \\
+		\addlinespace
+		truck          & Tanks \& Temples~\cite{knapitsch2017tanks}  & Outdoor vehicle, specular   & Temporal stability     & Reveals frame drops during interaction; high splat count challenges sorting & 400 MB        \\
+		\addlinespace
+		train          & Tanks \& Temples                            & Large outdoor, geometric    & Load time              & Tests parsing and upload overhead; extreme case for network constraints     & 175 MB        \\
+		\addlinespace
+		flower         & Real-world capture                          & Small, thin geometry        & Compression sens.      & Exposes quality degradation in .spz; thin structures prone to artifacts     & 6 MB          \\
+		\bottomrule
+	\end{tabular}
+\end{table*}
+
+\textbf{Stress Factor Coverage.} Our selection ensures orthogonal coverage of Web-specific failure modes: (1)~\textbf{High-frequency detail} (bonsai, flower): compression artifacts on fine texture; (2)~\textbf{Depth complexity} (garden, train): GPU overdraw from large depth range; (3)~\textbf{Memory footprint} (playroom, truck): browser memory limits and tab crashes; (4)~\textbf{Temporal stability} (truck, train): frame drops during camera motion; (5)~\textbf{Load time} (train, playroom): parsing overhead on large files; (6)~\textbf{Compression sensitivity} (flower, bonsai): quantization errors on thin geometry.
+
+\textbf{Cross-Dataset Justification.} Using scenes from four datasets (Mip-NeRF 360, Tanks \& Temples, Deep Blending, real-world captures) avoids dataset-specific biases. Single-dataset benchmarks risk mistaking dataset characteristics for fundamental algorithmic behavior. Our cross-dataset selection ensures findings reflect Web deployment realities rather than dataset artifacts.
+
+\section{Potential Challenges and Solutions}
+
+\subsection{Dataset Curation}
+\textbf{Challenge}: Selecting representative test scenes that span the diversity of 3DGS applications.
+
+\textbf{Solution}: Multi-tier dataset:
+\begin{itemize}
+	\item \textbf{Tier 1}: Standard scenes (Mip-NeRF 360) for compatibility with existing papers
+	\item \textbf{Tier 2}: Challenging cases (reflective surfaces, sparse views, dynamic content)
+	\item \textbf{Tier 3}: Domain-specific (product scanning, faces, large-scale outdoor)
+\end{itemize}
+
+\subsection{Maintaining Relevance}
+\textbf{Challenge}: Fast-moving field with new formats and methods appearing constantly.
+
+\textbf{Solution}:
+\begin{itemize}
+	\item Modular architecture allowing easy integration of new formats
+	\item Community contribution model (like Hugging Face)
+	\item Regular benchmark updates (quarterly)
+\end{itemize}
+
+\subsection{Ground Truth Acquisition}
+\textbf{Challenge}: Some metrics require ground truth images not always available.
+
+\textbf{Solution}:
+\begin{itemize}
+	\item Multi-view captures with held-out views for PSNR/SSIM/LPIPS
+	\item Reference-free metrics (FID, KID) for cases without GT
+	\item User studies for perceptual quality validation
+\end{itemize}
+
+\subsection{Browser/Device Variability}
+\textbf{Challenge}: Infinite combinations of browsers, OS, and hardware.
+
+\textbf{Solution}:
+\begin{itemize}
+	\item Focus on representative configurations (Chrome/Safari/Firefox on desktop/mobile)
+	\item Provide raw performance data for community analysis
+	\item Crowdsource additional device testing via open API
+\end{itemize}
+
+\section{Future Work}
+
+While our current system provides objective quality metrics (PSNR, SSIM) and performance benchmarks, perceptual quality assessment remains an important area for future investigation.
+
+\subsection{Perceptual User Studies}
+
+Our system includes an arena-style interface for anonymous A/B comparison, inspired by Chatbot Arena~\cite{chiang2024chatbotarena}. This enables side-by-side perceptual evaluation where users select which rendering appears better without knowing the underlying format. Future work will extend this to comprehensive user studies following established methodologies:
+
+\textbf{Two-Alternative Forced Choice (2AFC)}~\cite{itur2012bt500}: The ITU-R BT.500 standard defines rigorous protocols for subjective video quality assessment. Applying these methods to 3DGS format comparison would provide human preference data to validate objective metrics.
+
+\textbf{Pairwise Preference Aggregation}: The Bradley-Terry model~\cite{bradley1952rank} enables conversion of pairwise comparisons into global rankings. Similar to how Chatbot Arena uses Elo ratings for LLM evaluation, we can compute format rankings from crowdsourced preference data, revealing perceptual quality differences that PSNR/SSIM may miss.
+
+\textbf{Research Questions}:
+\begin{itemize}
+	\item How well do objective metrics (PSNR, SSIM, LPIPS) correlate with human preference?
+	\item At what compression ratio do users notice quality degradation?
+	\item Do temporal artifacts (frame drops, stuttering) outweigh static image quality in user preference?
+	\item Can we identify perceptual quality cliffs where small file size gains cause large preference drops?
+\end{itemize}
+
+These studies would inform compression algorithm design and establish evidence-based format selection guidelines for practitioners.
+
+\section{Conclusion}
+
+The 3D Gaussian Splatting research community has achieved remarkable progress in reconstruction quality and training speed, but lacks the infrastructure to evaluate real-world web deployment, a significant consumption mode for 3DGS content. Existing benchmarks focus on offline quality metrics while ignoring format fragmentation, browser constraints, and performance variability that practitioners face.
+
+We propose \textbf{WebGSBench}, a comprehensive benchmarking system that:
+\begin{enumerate}
+	\item Provides standardized test scenes and evaluation protocols
+	\item Automates conversion across web formats with quality and performance profiling
+	\item Enables reproducible comparison of research methods under realistic deployment conditions
+	\item Bridges the gap between academic development and practical deployment
+\end{enumerate}
+
+By following the successful model of ImageNet, COCO, and MLPerf, our system can become the de facto standard for 3DGS web deployment evaluation, accelerating research progress and increasing real-world impact. This contribution is timely. As the field matures, standardized evaluation infrastructure becomes critical for continued advancement.
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}

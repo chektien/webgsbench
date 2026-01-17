@@ -1,0 +1,54 @@
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.fls
+*.synctex(busy)
+*.synctex.gz
+*.fdb_latexmk
+*.bak*
+indent.log
+
+# Node.js
+node_modules/
+dist/
+.vite/
+*.local
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*~
+
+# Large asset files - excluded from git (too large)
+# We'll download benchmark files separately or use Git LFS
+assets/models/
+assets/360_v2/
+assets/360_extra_scenes/
+assets/tandt_db/
+datasets/
+assets/*.ply
+assets/*.splat
+assets/*.ksplat
+assets/*.spz
+assets/*.glb
+assets/*.babylon
+assets/*.ssproj
+
+# Note: Essential 12 benchmark files should be hosted separately
+# (bonsai, truck, playroom × .ply, .splat, .spz, .ksplat)

@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# WebGSBench Viewer Quick Start
+# Purpose: Launch viewer and provide usage instructions
+
+set -e
+
+VIEWER_DIR="/Users/chek/repos/webgsbench/webgsbench-app"
+
+echo "=================================================="
+echo "WebGSBench Viewer - Quick Start"
+echo "=================================================="
+echo ""
+
+# Check if node_modules exists
+if [ ! -d "${VIEWER_DIR}/node_modules" ]; then
+    echo "⚠️  Dependencies not installed. Running npm install..."
+    cd "${VIEWER_DIR}"
+    npm install
+    echo "✅ Dependencies installed"
+    echo ""
+fi
+
+echo "🚀 Starting WebGSBench viewer..."
+echo ""
+echo "Viewer will open at: http://localhost:5174"
+echo ""
+echo "=================================================="
+echo "Available Benchmark Files"
+echo "=================================================="
+echo ""
+echo "Small scene (bonsai - 7-56MB):"
+echo "  • assets/bonsai.ply     (56M)"
+echo "  • assets/bonsai.splat   (7.1M)"
+echo "  • assets/bonsai.ksplat  (5.4M)"
+echo "  • assets/bonsai.spz     (3.6M)"
+echo ""
+echo "Large indoor (playroom - 44-453MB):"
+echo "  • assets/playroom.ply     (453M)"
+echo "  • assets/playroom.splat   (58M)"
+echo "  • assets/playroom.ksplat  (88M)"
+echo "  • assets/playroom.spz     (44M)"
+echo ""
+echo "Large outdoor (truck - 33-400MB):"
+echo "  • assets/truck.ply     (400M)"
+echo "  • assets/truck.splat   (52M)"
+echo "  • assets/truck.ksplat  (78M)"
+echo "  • assets/truck.spz     (33M)"
+echo ""
+echo "=================================================="
+echo "Testing Checklist"
+echo "=================================================="
+echo ""
+echo "For each file, verify:"
+echo "  1. File loads without errors"
+echo "  2. Scene renders correctly"
+echo "  3. Camera controls work (orbit, pan, zoom)"
+echo "  4. FPS counter shows reasonable values (≥30 for bonsai)"
+echo "  5. No visual artifacts or corruption"
+echo ""
+echo "Report any issues with:"
+echo "  • Browser console errors (F12 → Console)"
+echo "  • Screenshot of visual artifacts"
+echo "  • Performance metrics (FPS, load time)"
+echo ""
+echo "=================================================="
+echo "Ground Truth Capture (After Testing)"
+echo "=================================================="
+echo ""
+echo "Once all files load successfully:"
+echo "  1. Load bonsai.ply (highest quality)"
+echo "  2. Position camera for view-front"
+echo "  3. Screenshot (Cmd+Shift+4 on macOS)"
+echo "  4. Save as: assets/ground-truth/bonsai/view-front.png"
+echo "  5. Repeat for 5 views × 3 scenes = 15 images"
+echo ""
+echo "=================================================="
+echo ""
+echo "Press Ctrl+C to stop the server when done."
+echo ""
+echo "=================================================="
+echo ""
+
+cd "${VIEWER_DIR}"
+npm run dev
