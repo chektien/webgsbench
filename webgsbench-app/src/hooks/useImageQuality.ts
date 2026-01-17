@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { captureCanvas, calculatePSNR, calculateSSIM, findViewerCanvases } from '../lib/metrics/imageQuality';
-import type { ImageQualityMetrics } from '../types';
-import type * as GaussianSplats3D from '@mkkellogg/gaussian-splats-3d';
+import type { ImageQualityMetrics, SparkViewerContext } from '../types';
 
 export function useImageQuality() {
   const [metrics, setMetrics] = useState<ImageQualityMetrics>({
@@ -13,8 +12,8 @@ export function useImageQuality() {
   const [isComparing, setIsComparing] = useState(false);
 
   const compareQuality = useCallback(async (
-    viewerA?: GaussianSplats3D.Viewer | null,
-    viewerB?: GaussianSplats3D.Viewer | null
+    contextA?: SparkViewerContext | null,
+    contextB?: SparkViewerContext | null
   ) => {
     setIsComparing(true);
     setMetrics({
@@ -64,12 +63,12 @@ export function useImageQuality() {
       }
 
       console.log(`Capturing canvases at ${canvasA.width}x${canvasA.height}...`);
-      console.log('Viewer A available:', !!viewerA);
-      console.log('Viewer B available:', !!viewerB);
+      console.log('Context A available:', !!contextA);
+      console.log('Context B available:', !!contextB);
 
       // Log camera position/distance for correlation analysis
-      if (viewerA?.camera?.position) {
-        const pos = viewerA.camera.position;
+      if (contextA?.camera?.position) {
+        const pos = contextA.camera.position;
         const distance = Math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
         console.log(`Camera distance from origin: ${distance.toFixed(2)} units`);
         console.log(`Camera position: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`);
@@ -79,8 +78,8 @@ export function useImageQuality() {
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // Capture both canvases with forced render (async now)
-      const imageDataA = await captureCanvas(canvasA, viewerA);
-      const imageDataB = await captureCanvas(canvasB, viewerB);
+      const imageDataA = await captureCanvas(canvasA, contextA);
+      const imageDataB = await captureCanvas(canvasB, contextB);
 
       // Sample some pixels to verify they're different
       const samplePixels = (data: ImageData, label: string) => {

@@ -3,7 +3,7 @@
  * This file runs before all tests
  */
 
-import { expect, afterEach } from 'vitest';
+import { afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
@@ -14,7 +14,7 @@ afterEach(() => {
 
 // Polyfill ImageData for testing environment if not available
 if (typeof ImageData === 'undefined') {
-  (global as any).ImageData = class ImageData {
+  (globalThis as any).ImageData = class ImageData {
     data: Uint8ClampedArray;
     width: number;
     height: number;

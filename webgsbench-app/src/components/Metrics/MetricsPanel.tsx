@@ -32,9 +32,11 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
     return count.toString();
   };
 
-  const formatDelta = (a: number, b: number) => {
+  const formatDelta = (a: number, b: number, showEqualForIdentical: boolean = false) => {
     if (b === 0) return 'N/A';
     const delta = ((a - b) / b) * 100;
+    // Show "=" when values are identical and showEqualForIdentical is true
+    if (showEqualForIdentical && Math.abs(delta) < 0.01) return '=';
     const sign = delta > 0 ? '+' : '';
     return `${sign}${formatNumber(delta, 1)}%`;
   };
@@ -81,12 +83,12 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
               />
 
               {metrics.memoryUsage > 0 && (
-                <MetricItem
-                  label="Memory"
-                  value={formatMemory(metrics.memoryUsage)}
-                  tooltip="JavaScript heap memory usage - Shows how much RAM the scene uses. Chrome only."
-                />
-              )}
+              <MetricItem
+                label="Memory"
+                value={formatMemory(metrics.memoryUsage)}
+                tooltip="JavaScript heap memory usage - Shows how much RAM the scene uses. Chrome only."
+              />
+            )}
             </div>
           </div>
 
@@ -234,7 +236,12 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
 
                 {qualityMetrics.capturedAt && (
                   <div className="pt-2 text-xs" style={{ color: '#FFACBF' }}>
-                    Captured: {new Date(qualityMetrics.capturedAt).toLocaleTimeString()}
+                    Last Computed: {new Date(qualityMetrics.capturedAt).toLocaleString(undefined, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      timeZoneName: 'short'
+                    })}
                   </div>
                 )}
               </div>

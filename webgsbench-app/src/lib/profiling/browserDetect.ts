@@ -42,7 +42,7 @@ export class BrowserProfiler {
     let gpu = 'Unknown';
     let webglVersion = 'None';
     
-    if (gl) {
+    if (gl && gl instanceof WebGLRenderingContext) {
       const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
       if (debugInfo) {
         gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
