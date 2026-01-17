@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Hide any default UI elements from gaussian-splats-3d library */
+.gs-container-message,
+.loadingSpinner,
+[class*="loading-message"],
+[class*="loading-spinner"] {
+  display: none !important;
+}
