@@ -170,7 +170,7 @@ export function AppLayout() {
       <header className="px-10 py-6 flex items-center justify-between shadow-lg" style={{ backgroundColor: '#3E3E3E', borderBottom: '1px solid #555', fontFamily: 'Arvo, serif' }}>
         <div>
           <h1 className="text-4xl tracking-tight" style={{ color: '#B39DFF', fontFamily: 'Arvo, serif' }}>WebGSBench</h1>
-          <p className="text-sm mt-1" style={{ color: '#FFACBF', fontFamily: 'Arvo, serif' }}>3D Gaussian Splatting Format Benchmark</p>
+          <p className="text-sm mt-1" style={{ color: '#FFACBF', fontFamily: 'Arvo, serif' }}>Web 3D Gaussian Splatting Benchmarking Tool</p>
         </div>
         <div className="flex gap-3">
           {(fileA && fileB) && (
