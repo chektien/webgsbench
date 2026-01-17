@@ -1,8 +1,9 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Arvo:wght@400;700&display=swap');
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Arvo', 'Helvetica Neue', Helvetica, Arial, serif;
 }
 
 /* Hide any default UI elements from gaussian-splats-3d library */

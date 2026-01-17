@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { GSFile } from '../../types';
 import { FileDropzone } from '../FileLoader/FileDropzone';
 import { GSViewer } from '../Viewer/GSViewer';
+import { CameraDistance } from '../Viewer/CameraDistance';
 import { MetricsPanel } from '../Metrics/MetricsPanel';
 import { useMetrics } from '../../hooks/useMetrics';
 import { useImageQuality } from '../../hooks/useImageQuality';
@@ -62,6 +63,16 @@ export function AppLayout() {
     metricsB.recordFrame(deltaTime);
   };
 
+  const handleChangeA = () => {
+    // Trigger file input directly
+    document.getElementById('file-input-A')?.click();
+  };
+
+  const handleChangeB = () => {
+    // Trigger file input directly
+    document.getElementById('file-input-B')?.click();
+  };
+
   const handleClearA = () => {
     setFileA(null);
     setViewerA(null);
@@ -111,11 +122,55 @@ export function AppLayout() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-900">
+      {/* Hidden file inputs for Change button functionality */}
+      <input
+        id="file-input-A"
+        type="file"
+        accept=".ply,.splat,.ksplat,.spz"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const extension = file.name.substring(file.name.lastIndexOf('.')) as GSFile['format'];
+            const gsFile: GSFile = {
+              file,
+              name: file.name,
+              size: file.size,
+              format: extension,
+            };
+            handleClearA();
+            setTimeout(() => handleFileSelectA(gsFile), 50);
+          }
+          e.target.value = ''; // Reset input
+        }}
+        className="hidden"
+      />
+      <input
+        id="file-input-B"
+        type="file"
+        accept=".ply,.splat,.ksplat,.spz"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const extension = file.name.substring(file.name.lastIndexOf('.')) as GSFile['format'];
+            const gsFile: GSFile = {
+              file,
+              name: file.name,
+              size: file.size,
+              format: extension,
+            };
+            handleClearB();
+            setTimeout(() => handleFileSelectB(gsFile), 50);
+          }
+          e.target.value = ''; // Reset input
+        }}
+        className="hidden"
+      />
+
       {/* Header */}
-      <header className="bg-gray-800 px-10 py-6 flex items-center justify-between shadow-lg" style={{ borderBottom: '1px solid #444' }}>
+      <header className="px-10 py-6 flex items-center justify-between shadow-lg" style={{ backgroundColor: '#3E3E3E', borderBottom: '1px solid #555', fontFamily: 'Arvo, serif' }}>
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">SplattingArena</h1>
-          <p className="text-sm mt-1 text-gray-400">3D Gaussian Splatting Arena</p>
+          <h1 className="text-4xl tracking-tight" style={{ color: '#B39DFF', fontFamily: 'Arvo, serif' }}>WebGSBench</h1>
+          <p className="text-sm mt-1" style={{ color: '#FFACBF', fontFamily: 'Arvo, serif' }}>3D Gaussian Splatting Format Benchmark</p>
         </div>
         <div className="flex gap-3">
           {(fileA && fileB) && (
@@ -131,7 +186,8 @@ export function AppLayout() {
                 imageQuality.compareQuality(viewerA, viewerB);
               }}
               disabled={imageQuality.isComparing}
-              className="px-6 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+              className="px-6 py-2.5 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ backgroundColor: imageQuality.isComparing ? '#666' : '#BEFF74', color: imageQuality.isComparing ? '#ccc' : '#333' }}
             >
               {imageQuality.isComparing ? 'Comparing...' : 'Compare Quality'}
             </button>
@@ -139,7 +195,8 @@ export function AppLayout() {
           {(fileA || fileB) && (
             <button
               onClick={handleClearAll}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+              className="px-6 py-2.5 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+              style={{ backgroundColor: '#FF575F' }}
             >
               Clear All
             </button>
@@ -152,20 +209,21 @@ export function AppLayout() {
         {/* Split Viewer Area */}
         <div className="flex-1 flex relative">
           {/* Splat A */}
-          <div className="flex-1 relative" style={{ borderRight: '1px solid #444' }}>
+          <div className="flex-1 relative" style={{ borderRight: '1px solid #555' }}>
             <div className="absolute top-4 left-4 z-20 flex gap-2 items-start max-w-[280px]">
-              <div className="px-3 py-2 bg-gray-800 bg-opacity-90 rounded-lg flex-1">
-                <div className="text-xs font-semibold text-gray-400 mb-0.5">Splat A</div>
+              <div className="px-3 py-2 rounded-lg flex-1" style={{ backgroundColor: 'rgba(62, 62, 62, 0.9)', fontFamily: 'Arvo, serif' }}>
+                <div className="text-sm font-semibold mb-0.5" style={{ color: '#FFACBF' }}>Splat A</div>
                 {fileA && (
-                  <div className="text-sm text-white truncate" title={fileA.name}>
+                  <div className="text-sm truncate" title={fileA.name} style={{ color: '#FDFDFB' }}>
                     {fileA.name}
                   </div>
                 )}
               </div>
               {fileA && (
                 <button
-                  onClick={handleClearA}
-                  className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
+                  onClick={handleChangeA}
+                  className="px-3 py-2 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
+                  style={{ backgroundColor: '#FF575F', fontFamily: 'Arvo, serif' }}
                   title="Change file for Splat A"
                 >
                   Change
@@ -191,18 +249,19 @@ export function AppLayout() {
           {/* Splat B */}
           <div className="flex-1 relative">
             <div className="absolute top-4 left-4 z-20 flex gap-2 items-start max-w-[280px]">
-              <div className="px-3 py-2 bg-gray-800 bg-opacity-90 rounded-lg flex-1">
-                <div className="text-xs font-semibold text-gray-400 mb-0.5">Splat B</div>
+              <div className="px-3 py-2 rounded-lg flex-1" style={{ backgroundColor: 'rgba(62, 62, 62, 0.9)', fontFamily: 'Arvo, serif' }}>
+                <div className="text-sm font-semibold mb-0.5" style={{ color: '#FFACBF' }}>Splat B</div>
                 {fileB && (
-                  <div className="text-sm text-white truncate" title={fileB.name}>
+                  <div className="text-sm truncate" title={fileB.name} style={{ color: '#FDFDFB' }}>
                     {fileB.name}
                   </div>
                 )}
               </div>
               {fileB && (
                 <button
-                  onClick={handleClearB}
-                  className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
+                  onClick={handleChangeB}
+                  className="px-3 py-2 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
+                  style={{ backgroundColor: '#FF575F', fontFamily: 'Arvo, serif' }}
                   title="Change file for Splat B"
                 >
                   Change
@@ -227,16 +286,17 @@ export function AppLayout() {
 
           {/* Navigation Controls - Single panel for both sides */}
           {(fileA || fileB) && (
-            <div
-              className="absolute bottom-4 left-4 px-4 py-3 bg-gray-800 bg-opacity-90 rounded-lg text-xs text-gray-300"
-              style={{ zIndex: 30 }}
-            >
-              <div className="font-semibold mb-2 text-white">Navigation Controls</div>
-              <div className="space-y-1">
-                <div><span className="font-medium">Rotate</span> - Left-click + Drag (One-finger)</div>
-                <div><span className="font-medium">Pan</span> - Right-click + Drag, Ctrl/Cmd + Drag (Two-finger)</div>
-                <div><span className="font-medium">Dolly ("zoom")</span> - Scroll (Mouse), Pinch (Trackpad)</div>
+            <div className="absolute bottom-4 left-4 space-y-3" style={{ zIndex: 30 }}>
+              <div className="px-4 py-3 rounded-lg text-xs" style={{ backgroundColor: 'rgba(62, 62, 62, 0.9)', color: '#FDFDFB', fontFamily: 'Arvo, serif' }}>
+                <div className="font-semibold mb-2" style={{ color: '#B39DFF' }}>Navigation Controls</div>
+                <div className="space-y-1">
+                  <div><span className="font-medium">Rotate</span> - Left-click + Drag (One-finger)</div>
+                  <div><span className="font-medium">Pan</span> - Right-click + Drag, Ctrl/Cmd + Drag (Two-finger)</div>
+                  <div><span className="font-medium">Dolly ("zoom")</span> - Scroll (Mouse), Pinch (Trackpad)</div>
+                </div>
               </div>
+              {/* Camera distance display - shows for Splat A (primary viewer) */}
+              <CameraDistance viewer={viewerA} />
             </div>
           )}
         </div>

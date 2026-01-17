@@ -72,13 +72,17 @@ export function FileDropzone({ onFileSelect, side }: FileDropzoneProps) {
         onDragLeave={handleDragLeave}
         className={`
           border-2 border-dashed rounded-xl p-16 text-center cursor-pointer
-          transition-all duration-200 bg-gray-800
+          transition-all duration-200
           ${isDragging
-            ? 'border-blue-500 bg-gray-700 scale-105'
-            : 'hover:bg-gray-750'
+            ? 'scale-105'
+            : ''
           }
         `}
-        style={{ borderColor: isDragging ? undefined : '#555' }}
+        style={{ 
+          borderColor: isDragging ? '#B39DFF' : '#555',
+          backgroundColor: isDragging ? 'rgba(62, 62, 62, 0.8)' : 'rgba(62, 62, 62, 0.5)',
+          fontFamily: 'Arvo, serif'
+        }}
         onClick={() => document.getElementById(inputId)?.click()}
       >
         <input
@@ -91,20 +95,20 @@ export function FileDropzone({ onFileSelect, side }: FileDropzoneProps) {
         <div>
           {selectedFile ? (
             <div>
-              <p className="font-semibold text-green-400 text-lg">Selected: {selectedFile}</p>
-              <p className="text-sm mt-3 text-gray-400">Click to select a different file</p>
+              <p className="font-semibold text-lg" style={{ color: '#BEFF74' }}>Selected: {selectedFile}</p>
+              <p className="text-sm mt-3" style={{ color: '#FFACBF' }}>Click to select a different file</p>
             </div>
           ) : (
             <div>
-              <svg className="mx-auto mb-6 w-16 h-16 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="mx-auto mb-6 w-16 h-16" fill="none" stroke="#B39DFF" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
-              <p className="text-xl font-semibold mb-4 text-white">
+              <p className="text-xl font-semibold mb-4" style={{ color: '#FDFDFB' }}>
                 {side ? `Load file for Splat ${side}` : 'Drop a Gaussian Splat file here'}
               </p>
-              <p className="text-sm mb-6 text-gray-400">or click to browse</p>
+              <p className="text-sm mb-6" style={{ color: '#FFACBF' }}>or click to browse</p>
               <div className="inline-block px-5 py-3 rounded-lg" style={{ backgroundColor: 'rgba(68, 68, 68, 0.3)' }}>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs" style={{ color: '#FDFDFB' }}>
                   Supported: .ply, .splat, .ksplat, .spz
                 </p>
               </div>

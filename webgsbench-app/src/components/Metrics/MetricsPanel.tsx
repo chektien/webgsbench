@@ -40,14 +40,14 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
   };
 
   const getDeltaColor = (a: number, b: number, higherIsBetter: boolean = true) => {
-    if (b === 0) return 'text-gray-400';
+    if (b === 0) return '#FDFDFB';
     const delta = a - b;
-    if (Math.abs(delta) < 0.01) return 'text-gray-400';
+    if (Math.abs(delta) < 0.01) return '#FDFDFB';
     const isPositive = delta > 0;
     if (higherIsBetter) {
-      return isPositive ? 'text-green-400' : 'text-red-400';
+      return isPositive ? '#BEFF74' : '#FF575F';
     } else {
-      return isPositive ? 'text-red-400' : 'text-green-400';
+      return isPositive ? '#FF575F' : '#BEFF74';
     }
   };
 
