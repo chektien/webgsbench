@@ -37,6 +37,24 @@ export function AppLayout() {
     setFileB(file);
   };
 
+  // Auto-trigger quality comparison when both files are loaded
+  useEffect(() => {
+    if (fileA && fileB && viewerA && viewerB && !imageQuality.isComparing && imageQuality.metrics.psnr === null) {
+      // Small delay to ensure viewers are fully rendered
+      const timer = setTimeout(() => {
+        console.log('=== Auto-triggering Quality Comparison ===');
+        console.log('Splat A:', fileA.name);
+        console.log('Splat B:', fileB.name);
+        if (fileA.name === fileB.name) {
+          console.warn('⚠️ WARNING: Both viewers loaded the SAME FILE!');
+          console.warn('PSNR/SSIM will be perfect (identical images)');
+        }
+        imageQuality.compareQuality(viewerA, viewerB);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [fileA, fileB, viewerA, viewerB, imageQuality.isComparing, imageQuality.metrics.psnr]);
+
   const handleViewerReadyA = useCallback((viewer: GaussianSplats3D.Viewer) => {
     setViewerA(viewer);
   }, []);
@@ -173,30 +191,11 @@ export function AppLayout() {
           <p className="text-sm mt-1" style={{ color: '#FFACBF', fontFamily: 'Arvo, serif' }}>Web 3D Gaussian Splatting Benchmarking Tool</p>
         </div>
         <div className="flex gap-3">
-          {(fileA && fileB) && (
-            <button
-              onClick={() => {
-                console.log('=== Starting Quality Comparison ===');
-                console.log('Splat A:', fileA.name);
-                console.log('Splat B:', fileB.name);
-                if (fileA.name === fileB.name) {
-                  console.warn('⚠️ WARNING: Both viewers loaded the SAME FILE!');
-                  console.warn('PSNR/SSIM will be perfect (identical images)');
-                }
-                imageQuality.compareQuality(viewerA, viewerB);
-              }}
-              disabled={imageQuality.isComparing}
-              className="px-6 py-2.5 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
-              style={{ backgroundColor: imageQuality.isComparing ? '#666' : '#BEFF74', color: imageQuality.isComparing ? '#ccc' : '#333' }}
-            >
-              {imageQuality.isComparing ? 'Comparing...' : 'Compare Quality'}
-            </button>
-          )}
           {(fileA || fileB) && (
             <button
               onClick={handleClearAll}
               className="px-6 py-2.5 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
-              style={{ backgroundColor: '#FF575F' }}
+              style={{ backgroundColor: '#B39DFF', fontFamily: 'Arvo, serif' }}
             >
               Clear All
             </button>
@@ -210,16 +209,20 @@ export function AppLayout() {
         <div className="flex-1 flex relative">
           {/* Splat A */}
           <div className="flex-1 relative" style={{ borderRight: '1px solid #555' }}>
-            <div className="absolute top-4 left-4 z-20 flex gap-2 items-start max-w-[280px]">
-              <div className="px-3 py-2 rounded-lg flex-1" style={{ backgroundColor: 'rgba(62, 62, 62, 0.9)', fontFamily: 'Arvo, serif' }}>
+            {/* File info top-left */}
+            <div className="absolute top-4 left-4 z-20">
+              <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(62, 62, 62, 0.9)', fontFamily: 'Arvo, serif' }}>
                 <div className="text-sm font-semibold mb-0.5" style={{ color: '#FFACBF' }}>Splat A</div>
                 {fileA && (
-                  <div className="text-sm truncate" title={fileA.name} style={{ color: '#FDFDFB' }}>
+                  <div className="text-sm truncate max-w-[200px]" title={fileA.name} style={{ color: '#FDFDFB' }}>
                     {fileA.name}
                   </div>
                 )}
               </div>
-              {fileA && (
+            </div>
+            {/* Change button top-right */}
+            {fileA && (
+              <div className="absolute top-4 right-4 z-20">
                 <button
                   onClick={handleChangeA}
                   className="px-3 py-2 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
@@ -228,8 +231,8 @@ export function AppLayout() {
                 >
                   Change
                 </button>
-              )}
-            </div>
+              </div>
+            )}
             {!fileA ? (
               <div className="absolute inset-0 flex items-center justify-center p-8">
                 <div className="max-w-lg w-full">
@@ -248,16 +251,20 @@ export function AppLayout() {
 
           {/* Splat B */}
           <div className="flex-1 relative">
-            <div className="absolute top-4 left-4 z-20 flex gap-2 items-start max-w-[280px]">
-              <div className="px-3 py-2 rounded-lg flex-1" style={{ backgroundColor: 'rgba(62, 62, 62, 0.9)', fontFamily: 'Arvo, serif' }}>
+            {/* File info top-left */}
+            <div className="absolute top-4 left-4 z-20">
+              <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(62, 62, 62, 0.9)', fontFamily: 'Arvo, serif' }}>
                 <div className="text-sm font-semibold mb-0.5" style={{ color: '#FFACBF' }}>Splat B</div>
                 {fileB && (
-                  <div className="text-sm truncate" title={fileB.name} style={{ color: '#FDFDFB' }}>
+                  <div className="text-sm truncate max-w-[200px]" title={fileB.name} style={{ color: '#FDFDFB' }}>
                     {fileB.name}
                   </div>
                 )}
               </div>
-              {fileB && (
+            </div>
+            {/* Change button top-right */}
+            {fileB && (
+              <div className="absolute top-4 right-4 z-20">
                 <button
                   onClick={handleChangeB}
                   className="px-3 py-2 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
@@ -266,8 +273,8 @@ export function AppLayout() {
                 >
                   Change
                 </button>
-              )}
-            </div>
+              </div>
+            )}
             {!fileB ? (
               <div className="absolute inset-0 flex items-center justify-center p-8">
                 <div className="max-w-lg w-full">

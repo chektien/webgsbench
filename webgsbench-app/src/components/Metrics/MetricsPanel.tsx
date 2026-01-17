@@ -57,20 +57,20 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
     const side = metricsA.fps > 0 ? 'A' : 'B';
 
     return (
-      <div className="w-full h-full bg-gray-800 text-white overflow-y-auto">
+      <div className="w-full h-full overflow-y-auto" style={{ backgroundColor: '#3E3E3E', color: '#FDFDFB', fontFamily: 'Arvo, serif' }}>
         <div className="px-10 py-8">
-          <h2 className="text-xl font-bold mb-8 text-gray-100">
+          <h2 className="text-xl mb-8" style={{ color: '#B39DFF' }}>
             Splat {side} Metrics
           </h2>
 
           {/* Basic Performance */}
           <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wide">Basic</h3>
+            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wide" style={{ color: '#FFACBF' }}>Basic</h3>
             <div className="space-y-2">
               <MetricItem
                 label="FPS"
                 value={formatNumber(metrics.fps, 1)}
-                color={metrics.fps >= 30 ? 'text-green-400' : metrics.fps >= 15 ? 'text-yellow-400' : 'text-red-400'}
+                color={metrics.fps >= 30 ? '#BEFF74' : metrics.fps >= 15 ? '#FFD59B' : '#FF575F'}
                 tooltip="Frames Per Second - Higher is better. Shows how smoothly the scene renders."
               />
 
@@ -93,7 +93,7 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
         {/* Stability Metrics */}
         {metrics.frameTimeVariance > 0 && (
           <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wide">Stability</h3>
+            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wide" style={{ color: '#FFACBF' }}>Stability</h3>
             <div className="space-y-2">
               <MetricItem
                 label="Frame Time σ"
@@ -104,14 +104,14 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
               <MetricItem
                 label="1% Low FPS"
                 value={formatNumber(metrics.fps1PercentLow, 1)}
-                color={metrics.fps1PercentLow >= 30 ? 'text-green-400' : metrics.fps1PercentLow >= 15 ? 'text-yellow-400' : 'text-red-400'}
+                color={metrics.fps1PercentLow >= 30 ? '#BEFF74' : metrics.fps1PercentLow >= 15 ? '#FFD59B' : '#FF575F'}
                 tooltip="Average FPS of worst 1% of frames - Higher is better. Reveals stuttering and frame drops."
               />
 
               <MetricItem
                 label="0.1% Low FPS"
                 value={formatNumber(metrics.fps01PercentLow, 1)}
-                color={metrics.fps01PercentLow >= 30 ? 'text-green-400' : metrics.fps01PercentLow >= 15 ? 'text-yellow-400' : 'text-red-400'}
+                color={metrics.fps01PercentLow >= 30 ? '#BEFF74' : metrics.fps01PercentLow >= 15 ? '#FFD59B' : '#FF575F'}
                 tooltip="Average FPS of worst 0.1% of frames - Ultra-worst-case performance metric."
               />
             </div>
@@ -121,7 +121,7 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
         {/* Percentiles */}
         {metrics.frameTimeP50 > 0 && (
           <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wide">Percentiles</h3>
+            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wide" style={{ color: '#FFACBF' }}>Percentiles</h3>
             <div className="space-y-2">
               <MetricItem
                 label="P50 (Median)"
@@ -147,7 +147,7 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
         {/* File Info */}
         {(metrics.loadTime > 0 || metrics.splatCount > 0) && (
           <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wide">File Info</h3>
+            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wide" style={{ color: '#FFACBF' }}>File Info</h3>
             <div className="space-y-2">
               {metrics.loadTime > 0 && (
                 <MetricItem
@@ -185,7 +185,7 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
         )}
 
           {metrics.memoryUsage === 0 && (
-            <div className="mt-8 p-4 rounded bg-gray-700 bg-opacity-30 text-xs text-gray-400">
+            <div className="mt-8 p-4 rounded text-xs" style={{ backgroundColor: 'rgba(62, 62, 62, 0.5)', color: '#FFACBF' }}>
               Memory metrics only available in Chrome
             </div>
           )}
@@ -196,15 +196,55 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
 
   // Comparison view when both files are loaded
   return (
-    <div className="w-full h-full bg-gray-800 text-white overflow-y-auto overflow-x-visible">
+    <div className="w-full h-full overflow-y-auto overflow-x-visible" style={{ backgroundColor: '#3E3E3E', color: '#FDFDFB', fontFamily: 'Arvo, serif' }}>
       <div className="px-10 py-8">
-        <h2 className="text-xl font-bold mb-8 text-gray-100">
+        <h2 className="text-xl mb-8" style={{ color: '#B39DFF' }}>
           Comparison
         </h2>
 
+        {/* Quality Comparison (PSNR/SSIM) - MOVED TO TOP */}
+        {qualityMetrics && (qualityMetrics.psnr !== null || qualityMetrics.ssim !== null || qualityMetrics.error) && (
+          <div className="mb-8">
+            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wide" style={{ color: '#FFACBF' }}>Quality Comparison</h3>
+
+            {qualityMetrics.error ? (
+              <div className="p-4 rounded-lg text-sm" style={{ backgroundColor: 'rgba(255, 87, 95, 0.2)', border: '1px solid #FF575F', color: '#FF575F' }}>
+                <div className="font-semibold mb-1">Error</div>
+                <div className="text-xs">{qualityMetrics.error}</div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {qualityMetrics.psnr !== null && (
+                  <MetricItem
+                    label="PSNR"
+                    value={qualityMetrics.psnr === Infinity ? '∞ dB (identical)' : `${formatNumber(qualityMetrics.psnr, 2)} dB`}
+                    color={qualityMetrics.psnr > 35 ? '#BEFF74' : qualityMetrics.psnr > 25 ? '#FFD59B' : '#FF575F'}
+                    tooltip="Peak Signal-to-Noise Ratio - Higher is better. Typical values: 25-45 dB. Measures pixel-level fidelity between Splat A and Splat B renders. >35 dB = excellent, 25-35 dB = good, <25 dB = poor."
+                  />
+                )}
+
+                {qualityMetrics.ssim !== null && (
+                  <MetricItem
+                    label="SSIM"
+                    value={formatNumber(qualityMetrics.ssim, 4)}
+                    color={qualityMetrics.ssim > 0.95 ? '#BEFF74' : qualityMetrics.ssim > 0.85 ? '#FFD59B' : '#FF575F'}
+                    tooltip="Structural Similarity Index - Higher is better (0-1 scale, 1.0 = identical). Measures perceptual similarity considering luminance, contrast, and structure. >0.95 = excellent, 0.85-0.95 = good, <0.85 = noticeable differences."
+                  />
+                )}
+
+                {qualityMetrics.capturedAt && (
+                  <div className="pt-2 text-xs" style={{ color: '#FFACBF' }}>
+                    Captured: {new Date(qualityMetrics.capturedAt).toLocaleTimeString()}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Basic Performance Comparison */}
         <div className="mb-8">
-          <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wide">Basic</h3>
+          <h3 className="text-sm font-semibold mb-4 uppercase tracking-wide" style={{ color: '#FFACBF' }}>Basic</h3>
           <div className="space-y-4">
             <ComparisonMetricItem
               label="FPS"
@@ -240,7 +280,7 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
         {/* Stability Comparison */}
         {(metricsA.frameTimeVariance > 0 || metricsB.frameTimeVariance > 0) && (
           <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wide">Stability</h3>
+            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wide" style={{ color: '#FFACBF' }}>Stability</h3>
             <div className="space-y-4">
               <ComparisonMetricItem
                 label="1% Low FPS"
@@ -266,7 +306,7 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
         {/* File Info Comparison */}
         {(metricsA.splatCount > 0 || metricsB.splatCount > 0) && (
           <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wide">File Info</h3>
+            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wide" style={{ color: '#FFACBF' }}>File Info</h3>
             <div className="space-y-4">
               {(metricsA.loadTime > 0 || metricsB.loadTime > 0) && (
                 <ComparisonMetricItem
@@ -285,7 +325,7 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
                   valueA={formatCount(metricsA.splatCount)}
                   valueB={formatCount(metricsB.splatCount)}
                   delta={formatDelta(metricsA.splatCount, metricsB.splatCount)}
-                  deltaColor="text-gray-400"
+                  deltaColor="#FDFDFB"
                   tooltip="Number of 3D Gaussian primitives in the scene. Higher count means more detail but potentially slower performance. Neutral comparison (no color coding)."
                 />
               )}
@@ -303,46 +343,6 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
             </div>
           </div>
         )}
-
-        {/* Quality Comparison (PSNR/SSIM) */}
-        {qualityMetrics && (qualityMetrics.psnr !== null || qualityMetrics.ssim !== null || qualityMetrics.error) && (
-          <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wide">Quality Comparison</h3>
-
-            {qualityMetrics.error ? (
-              <div className="p-4 rounded-lg bg-red-900 bg-opacity-30 border border-red-700 text-red-200 text-sm">
-                <div className="font-semibold mb-1">Error</div>
-                <div className="text-xs">{qualityMetrics.error}</div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {qualityMetrics.psnr !== null && (
-                  <MetricItem
-                    label="PSNR"
-                    value={qualityMetrics.psnr === Infinity ? '∞ dB (identical)' : `${formatNumber(qualityMetrics.psnr, 2)} dB`}
-                    color={qualityMetrics.psnr > 35 ? 'text-green-400' : qualityMetrics.psnr > 25 ? 'text-yellow-400' : 'text-red-400'}
-                    tooltip="Peak Signal-to-Noise Ratio - Higher is better. Typical values: 25-45 dB. Measures pixel-level fidelity between Splat A and Splat B renders. >35 dB = excellent, 25-35 dB = good, <25 dB = poor."
-                  />
-                )}
-
-                {qualityMetrics.ssim !== null && (
-                  <MetricItem
-                    label="SSIM"
-                    value={formatNumber(qualityMetrics.ssim, 4)}
-                    color={qualityMetrics.ssim > 0.95 ? 'text-green-400' : qualityMetrics.ssim > 0.85 ? 'text-yellow-400' : 'text-red-400'}
-                    tooltip="Structural Similarity Index - Higher is better (0-1 scale, 1.0 = identical). Measures perceptual similarity considering luminance, contrast, and structure. >0.95 = excellent, 0.85-0.95 = good, <0.85 = noticeable differences."
-                  />
-                )}
-
-                {qualityMetrics.capturedAt && (
-                  <div className="pt-2 text-xs text-gray-400">
-                    Captured: {new Date(qualityMetrics.capturedAt).toLocaleTimeString()}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -355,36 +355,37 @@ interface MetricItemProps {
   tooltip?: string;
 }
 
-function MetricItem({ label, value, color = 'text-white', tooltip }: MetricItemProps) {
+function MetricItem({ label, value, color = '#FDFDFB', tooltip }: MetricItemProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
     <div
       className="flex justify-between items-center py-2 relative"
-      style={{ borderBottom: '1px solid #444' }}
+      style={{ borderBottom: '1px solid #555', fontFamily: 'Arvo, serif' }}
       onMouseEnter={() => tooltip && setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
       <div className="flex items-center gap-1">
-        <span className="text-sm font-medium text-gray-400">{label}</span>
+        <span className="text-sm font-medium" style={{ color: '#FFACBF' }}>{label}</span>
         {tooltip && (
-          <svg className="w-4 h-4 text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 cursor-help" fill="none" stroke="#FFACBF" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         )}
       </div>
-      <span className={`font-mono font-semibold text-lg ${color}`}>{value}</span>
+      <span className="font-mono font-semibold text-lg" style={{ color }}>{value}</span>
 
       {/* Tooltip */}
       {showTooltip && tooltip && (
         <div
-          className="absolute left-0 right-0 p-3 rounded-lg shadow-lg text-xs text-gray-200 leading-relaxed"
+          className="absolute left-0 right-0 p-3 rounded-lg shadow-lg text-xs leading-relaxed"
           style={{
             top: '100%',
             marginTop: '8px',
             zIndex: 9999,
-            backgroundColor: '#374151',
-            border: '1px solid #4B5563'
+            backgroundColor: '#2D2D2D',
+            border: '1px solid #555',
+            color: '#FDFDFB'
           }}
         >
           {tooltip}
@@ -409,40 +410,41 @@ function ComparisonMetricItem({ label, valueA, valueB, delta, deltaColor, toolti
   return (
     <div
       className="py-3 relative"
-      style={{ borderBottom: '1px solid #444' }}
+      style={{ borderBottom: '1px solid #555', fontFamily: 'Arvo, serif' }}
       onMouseEnter={() => tooltip && setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
-      <div className="text-sm font-medium text-gray-400 mb-2 flex items-center gap-1">
+      <div className="text-sm font-medium mb-2 flex items-center gap-1" style={{ color: '#FFACBF' }}>
         {label}
         {tooltip && (
-          <svg className="w-4 h-4 text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 cursor-help" fill="none" stroke="#FFACBF" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         )}
       </div>
       <div className="flex justify-between items-center text-xs">
         <div className="flex-1">
-          <span className="text-gray-500">A:</span>
-          <span className="ml-2 font-mono text-white">{valueA}</span>
+          <span style={{ color: '#B39DFF' }}>A:</span>
+          <span className="ml-2 font-mono" style={{ color: '#FDFDFB' }}>{valueA}</span>
         </div>
         <div className="flex-1">
-          <span className="text-gray-500">B:</span>
-          <span className="ml-2 font-mono text-white">{valueB}</span>
+          <span style={{ color: '#B39DFF' }}>B:</span>
+          <span className="ml-2 font-mono" style={{ color: '#FDFDFB' }}>{valueB}</span>
         </div>
-        <div className={`font-mono font-semibold ${deltaColor}`}>{delta}</div>
+        <div className="font-mono font-semibold" style={{ color: deltaColor }}>{delta}</div>
       </div>
 
       {/* Tooltip */}
       {showTooltip && tooltip && (
         <div
-          className="absolute left-0 right-0 p-3 rounded-lg shadow-lg text-xs text-gray-200 leading-relaxed"
+          className="absolute left-0 right-0 p-3 rounded-lg shadow-lg text-xs leading-relaxed"
           style={{
             top: '100%',
             marginTop: '8px',
             zIndex: 9999,
-            backgroundColor: '#374151',
-            border: '1px solid #4B5563'
+            backgroundColor: '#2D2D2D',
+            border: '1px solid #555',
+            color: '#FDFDFB'
           }}
         >
           {tooltip}
