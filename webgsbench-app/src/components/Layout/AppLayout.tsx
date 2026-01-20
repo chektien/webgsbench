@@ -117,6 +117,13 @@ export function AppLayout() {
     imageQuality.reset();
   };
 
+  const handleManualCompareQuality = () => {
+    if (contextA && contextB) {
+      console.log('=== Manual Quality Comparison Triggered ===');
+      imageQuality.compareQuality(contextA, contextB);
+    }
+  };
+
   // Update resolution on window resize for both viewers
   useEffect(() => {
     const updateResolution = () => {
@@ -317,6 +324,8 @@ export function AppLayout() {
             metricsB={metricsB.metrics}
             showComparison={!!(fileA && fileB)}
             qualityMetrics={imageQuality.metrics}
+            onCompareQuality={handleManualCompareQuality}
+            isComparingQuality={imageQuality.isComparing}
           />
         </div>
       </div>

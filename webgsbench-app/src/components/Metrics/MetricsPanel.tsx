@@ -6,9 +6,11 @@ interface MetricsPanelProps {
   metricsB: BenchmarkMetrics;
   showComparison: boolean;
   qualityMetrics?: ImageQualityMetrics;
+  onCompareQuality?: () => void;
+  isComparingQuality?: boolean;
 }
 
-export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetrics }: MetricsPanelProps) {
+export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetrics, onCompareQuality, isComparingQuality }: MetricsPanelProps) {
   const formatNumber = (num: number, decimals: number = 1) => {
     return num.toFixed(decimals);
   };
@@ -207,7 +209,23 @@ export function MetricsPanel({ metricsA, metricsB, showComparison, qualityMetric
         {/* Quality Comparison (PSNR/SSIM) - MOVED TO TOP */}
         {qualityMetrics && (qualityMetrics.psnr !== null || qualityMetrics.ssim !== null || qualityMetrics.error) && (
           <div className="mb-8">
-            <h3 className="text-sm font-semibold mb-4 uppercase tracking-wide" style={{ color: '#FFACBF' }}>Quality Comparison</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wide" style={{ color: '#FFACBF' }}>Quality Comparison</h3>
+              {onCompareQuality && (
+                <button
+                  onClick={onCompareQuality}
+                  disabled={isComparingQuality}
+                  className="px-3 py-1 text-xs font-semibold rounded transition-colors"
+                  style={{
+                    backgroundColor: isComparingQuality ? '#555' : '#B39DFF',
+                    color: isComparingQuality ? '#999' : '#1F1F1F',
+                    cursor: isComparingQuality ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {isComparingQuality ? 'Comparing...' : 'Recompare'}
+                </button>
+              )}
+            </div>
 
             {qualityMetrics.error ? (
               <div className="p-4 rounded-lg text-sm" style={{ backgroundColor: 'rgba(255, 87, 95, 0.2)', border: '1px solid #FF575F', color: '#FF575F' }}>
