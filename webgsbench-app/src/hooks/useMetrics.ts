@@ -64,6 +64,10 @@ export function useMetrics() {
     });
   };
 
+  const getCurrentMetrics = () => {
+    return collectorRef.current.getMetrics();
+  };
+
   return {
     metrics,
     recordFrame,
@@ -71,5 +75,6 @@ export function useMetrics() {
     setFileInfo,
     setResolution,
     reset,
+    getCurrentMetrics,
   };
 }

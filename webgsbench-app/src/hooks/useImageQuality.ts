@@ -158,12 +158,15 @@ export function useImageQuality() {
 
       console.log(`Quality metrics - PSNR: ${psnr.toFixed(2)} dB, SSIM: ${ssim.toFixed(4)}`);
 
-      setMetrics({
+      const metricsResult = {
         psnr,
         ssim,
         capturedAt: new Date().toISOString(),
         error: null,
-      });
+      };
+
+      setMetrics(metricsResult);
+      return { psnr, ssim };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('Quality comparison failed:', errorMessage);
@@ -173,6 +176,7 @@ export function useImageQuality() {
         capturedAt: null,
         error: errorMessage,
       });
+      return { psnr: null, ssim: null };
     } finally {
       setIsComparing(false);
     }

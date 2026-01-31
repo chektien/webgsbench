@@ -1,0 +1,175 @@
+% UPDATED SECTIONS FOR MAIN.TEX
+% These sections should be inserted into the main paper to reflect
+% the flexibility and workflow integration focus
+
+% ============================================
+% UPDATED ABSTRACT (Replace existing abstract)
+% ============================================
+
+\begin{abstract}
+	While 3D Gaussian Splatting (3DGS) advances rapidly in reconstruction quality and compression efficiency, researchers lack tools that integrate with their workflow to evaluate web deployment, where format fragmentation, browser heterogeneity, and hardware diversity create challenges invisible to desktop evaluation. We present \textbf{WebGSBench}, a flexible benchmarking framework designed to fit how Gaussian Splatting researchers actually work. Our system supports \textit{any} scene or dataset, allowing researchers to benchmark their own captures alongside standard test scenes. Unlike rigid benchmarks that dictate evaluation conditions, WebGSBench adapts to researcher needs: upload your scenes, compare against any reference format (not just PLY), and receive comprehensive quality and performance reports through an interactive web interface or automated batch pipeline. We demonstrate the system through experiments on standard benchmarks and show how it enables reproducible evaluation of new compression methods. Code and data are publicly available.
+\end{abstract}
+
+% ============================================
+% NEW SECTION: Dataset-Agnostic Framework
+% Insert after Section 4.1 (Scene Selection)
+% ============================================
+
+\subsection{Flexible Dataset Integration}
+
+\textbf{Accommodating Diverse Research Needs.} While we provide a curated set of 6 test scenes (Table~\ref{tab:scene-selection}), WebGSBench is designed to work with \textit{any} scene or dataset. Researchers often work with:
+\begin{itemize}
+	\item Proprietary captures from their own equipment
+	\item Public datasets not in our standard suite (e.g., nerfstudio datasets, custom photogrammetry)
+	\item Modified versions of standard scenes (different preprocessing, augmentations)
+	\item Synthetic scenes from simulators or generative models
+\end{itemize}
+
+\textbf{Custom Dataset Upload.} Researchers can upload their own scenes in any supported format (.ply, .splat, .ksplat, .spz). The system automatically:
+\begin{enumerate}
+	\item Validates file integrity and format compliance
+	\item Generates scene metadata (splat count, bounding box, complexity metrics)
+	\item Suggests appropriate camera presets based on scene scale
+	\item Enables benchmarking against any reference scene
+\end{enumerate}
+
+\textbf{Reference Flexibility.} Unlike benchmarks that mandate a specific reference (typically uncompressed PLY), WebGSBench allows any scene to serve as reference. This supports research scenarios where:
+\begin{itemize}
+	\item The uncompressed version is unavailable (e.g., direct capture in compressed format)
+	\item Researchers want to compare against a specific prior method's output
+	\item Ablation studies require comparing variant A against variant B (neither is "ground truth")
+\end{itemize}
+
+% ============================================
+% NEW SECTION: Researcher Workflow Integration
+% Insert after Section 4 (Methodology)
+% ============================================
+
+\section{Researcher Workflow Integration}
+
+WebGSBench is designed not as a standalone benchmark to be run once, but as infrastructure that integrates into how 3DGS researchers actually work. Our design follows three principles: (1) minimize friction for common tasks, (2) support iterative development workflows, and (3) produce publication-ready artifacts.
+
+\subsection{Three Research Workflows}
+
+We identify three common scenarios where researchers need benchmarking:
+
+\textbf{Workflow 1: Algorithm Development (Iterative)}. During method development, researchers repeatedly modify their algorithm and need quick feedback. They need:
+\begin{itemize}
+	\item Fast validation on 1--2 scenes (not the full 6-scene suite)
+	\item Quick quality checks against a baseline (not full cross-format analysis)
+	\item Visual debugging tools to identify failure cases
+\end{itemize}
+
+\textbf{Workflow 2: Paper Evaluation (Comprehensive)}. When preparing a submission, researchers need rigorous evaluation. They need:
+\begin{itemize}
+	\item Complete 6-scene benchmark with all viewpoints
+	\item Statistical rigor (multiple replicates, variance reporting)
+	\item Comparison against multiple baselines
+	\item Publication-ready figures and tables
+\end{itemize}
+
+\textbf{Workflow 3: Method Submission (Standardized)}. After publication, researchers want to add their method to the public leaderboard. They need:
+\begin{itemize}
+	\item Standardized protocol ensuring fair comparison
+	\item Automated report generation
+	\item Version control and reproducibility tracking
+\end{itemize}
+
+\subsection{Interface Modes}
+
+WebGSBench supports these workflows through three interface modes:
+
+\textbf{Interactive Mode} (Web UI): For Workflow 1--2, researchers use the browser-based interface to:
+\begin{itemize}
+	\item Upload scenes via drag-and-drop
+	\item Compare side-by-side with synchronized camera controls
+	\item Capture screenshots at specific viewpoints
+	\item Export metrics to CSV for custom analysis
+\end{itemize}
+
+\textbf{Batch Mode} (Automated): For Workflow 2, researchers queue multiple evaluations:
+\begin{itemize}
+	\item Select scenes, formats, and viewpoints via configuration
+	\item Run unattended (e.g., overnight)
+	\item Receive comprehensive report with all metrics and figures
+\end{itemize}
+
+\textbf{API Mode} (Programmatic): For Workflow 3 and integration into pipelines:
+\begin{itemize}
+	\item REST API for submitting scenes and retrieving results
+	\item Command-line interface for CI/CD integration
+	\item Python client for Jupyter notebook workflows
+\end{itemize}
+
+\subsection{Publication-Ready Outputs}
+
+A key design goal is reducing the time from evaluation to paper submission. WebGSBench automatically generates:
+
+\textbf{Standardized Figures:}
+\begin{itemize}
+	\item Quality vs. file size Pareto frontier (Figure~\ref{fig:pareto})
+	\item Browser performance comparison bar charts
+	\item Temporal stability FPS traces
+	\item Side-by-side visual comparisons with difference heatmaps
+\end{itemize}
+
+\textbf{LaTeX-Ready Tables:}
+\begin{itemize}
+	\item Per-scene quality metrics (PSNR, SSIM) with confidence intervals
+	\item Performance profiling across browsers
+	\item Format comparison matrix
+\end{itemize}
+
+\textbf{Reproducibility Packages:}
+\begin{itemize}
+	\item Complete metadata (browser version, GPU, timestamps)
+	\item Configuration files reproducing the exact test conditions
+	\item Raw data (CSV) for verification or re-analysis
+\end{itemize}
+
+% ============================================
+% UPDATED SECTION 6: Related Systems
+% Add to existing differentiation discussion
+% ============================================
+
+\subsection{Flexibility Compared to Existing Benchmarks}
+
+Existing 3DGS benchmarks are \textit{rigid}: they specify exact scenes, metrics, and evaluation protocols. While this ensures consistency, it creates friction for researchers who:
+\begin{itemize}
+	\item Work with proprietary datasets they cannot share
+	\item Need to benchmark on domain-specific scenes (medical, industrial)
+	\item Want to compare against custom baselines not in the standard suite
+\end{itemize}
+
+WebGSBench follows the model of MLPerf~\cite{mattson2020mlperf}, which provides both \textbf{standardized benchmarks} (for fair comparison) and \textbf{flexible infrastructure} (for custom evaluation). Researchers can:
+\begin{enumerate}
+	\item Use our 6-scene suite for standard comparison
+	\item Upload custom scenes for domain-specific evaluation
+	\item Contribute new scenes to expand the benchmark
+\end{enumerate}
+
+This dual approach maximizes both reproducibility (through standard tests) and applicability (through flexibility).
+
+% ============================================
+% UPDATED CONTRIBUTIONS SECTION
+% ============================================
+
+\subsection{Infrastructure Contributions (Updated)}
+
+\begin{enumerate}
+	\item \textbf{Flexible Evaluation Framework}: Supports any scene, dataset, or reference format---not just our standard test suite
+	\item \textbf{Researcher-Centric Design}: Three interface modes (interactive, batch, API) fitting different workflow stages
+	\item \textbf{Automated Benchmarking Pipeline}: End-to-end conversion, rendering, and metric computation
+	\item \textbf{Publication-Ready Outputs}: Automatic figure generation, LaTeX tables, and reproducibility packages
+	\item \textbf{Open-Source Toolkit}: Extensible codebase supporting community contributions of new scenes and metrics
+\end{enumerate}
+
+\subsection{Scientific Contributions (Updated)}
+
+\begin{enumerate}
+	\item \textbf{Comprehensive Format Study}: First systematic comparison of 3DGS web formats with \textit{any} reference baseline
+	\item \textbf{Cross-Dataset Validation}: Demonstrates WebGSBench works across diverse scene types and sources
+	\item \textbf{Deployment Performance Characterization}: Profiling across browsers, devices, and rendering backends
+	\item \textbf{Workflow Integration Methodology}: How to design benchmarks that researchers actually use
+\end{enumerate}
+
