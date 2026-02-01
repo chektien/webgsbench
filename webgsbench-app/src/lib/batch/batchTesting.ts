@@ -83,12 +83,69 @@ export interface BatchProgress {
  */
 export const BATCH_TEMPLATES = {
   /**
-   * Standard paper evaluation - 6 scenes, all formats, all viewpoints
-   * Most comprehensive, takes ~1-2 hours
+   * Quick Check - Fast validation of 1-2 scenes
+   * For iterative development and smoke testing
+   * Takes ~2-5 minutes
+   */
+  quickValidation: {
+    name: 'Quick Check',
+    description: 'Fast 2-scene validation (2 viewpoints, 1 replicate). ~2-5 min.',
+    defaultScenes: ['bonsai', 'truck'],
+    defaultFormats: ['splat', 'spz'],
+    viewpointCount: 2,
+    defaultReplicates: 1,
+    defaultConfig: {
+      testName: 'quick-validation',
+      scenes: [],
+      referenceFormat: 'ply',
+      testFormats: ['splat', 'spz'],
+      viewpoints: [], // Will use front and close-up only
+      replicates: 1,
+      delayBetweenCaptures: 200,
+      captureQualityMetrics: true,
+      capturePerformanceMetrics: true,
+      captureScreenshots: false,
+    }
+  },
+
+  /**
+   * Format Comparison - Compare all formats on selected scenes
+   * Good for evaluating compression quality vs file size tradeoffs
+   * Takes ~10-20 minutes
+   */
+  formatComparison: {
+    name: 'Format Comparison',
+    description: 'Compare all formats across scenes (3 viewpoints, 2 replicates). ~10-20 min.',
+    defaultScenes: ['bonsai', 'truck', 'garden'],
+    defaultFormats: ['splat', 'ksplat', 'spz'],
+    viewpointCount: 3,
+    defaultReplicates: 2,
+    defaultConfig: {
+      testName: 'format-comparison',
+      scenes: [],
+      referenceFormat: 'ply',
+      testFormats: ['splat', 'ksplat', 'spz'],
+      viewpoints: [], // Front, close-up, wide
+      replicates: 2,
+      delayBetweenCaptures: 500,
+      captureQualityMetrics: true,
+      capturePerformanceMetrics: true,
+      captureScreenshots: true,
+    }
+  },
+
+  /**
+   * Full Benchmark - Complete 6-scene evaluation
+   * For paper submissions and comprehensive analysis
+   * Takes ~1-2 hours
    */
   paperEvaluation: {
-    name: 'SIGGRAPH Paper Evaluation',
-    description: 'Complete 6-scene benchmark with all formats and viewpoints',
+    name: 'Full Benchmark',
+    description: 'Complete 6-scene benchmark (5 viewpoints, 3 replicates). ~1-2 hours.',
+    defaultScenes: ['bonsai', 'garden', 'playroom', 'truck', 'train', 'flower'],
+    defaultFormats: ['splat', 'ksplat', 'spz'],
+    viewpointCount: 5,
+    defaultReplicates: 3,
     defaultConfig: {
       testName: 'paper-evaluation',
       scenes: [], // To be populated based on available scenes
@@ -104,33 +161,41 @@ export const BATCH_TEMPLATES = {
   },
   
   /**
-   * Quick validation - 2 scenes, 1 format, 2 viewpoints
-   * For iterative development, takes ~5-10 minutes
+   * Performance Profiling - Focus on FPS and memory metrics
+   * More replicates for stable measurements, quality metrics optional
    */
-  quickValidation: {
-    name: 'Quick Validation',
-    description: 'Fast check on bonsai and truck',
+  performanceProfiling: {
+    name: 'Performance Focus',
+    description: 'FPS/memory profiling with 5 replicates (2 viewpoints). ~15-30 min.',
+    defaultScenes: ['bonsai', 'truck', 'garden'],
+    defaultFormats: ['splat', 'ksplat', 'spz'],
+    viewpointCount: 2,
+    defaultReplicates: 5,
     defaultConfig: {
-      testName: 'quick-validation',
+      testName: 'performance-profile',
       scenes: [],
       referenceFormat: 'ply',
-      testFormats: ['spz'],
-      viewpoints: [], // Will use front and close-up only
-      replicates: 1,
-      delayBetweenCaptures: 200,
-      captureQualityMetrics: true,
+      testFormats: ['splat', 'ksplat', 'spz'],
+      viewpoints: [], // Just front and wide view
+      replicates: 5, // More replicates for stable FPS measurements
+      delayBetweenCaptures: 1000,
+      captureQualityMetrics: false,
       capturePerformanceMetrics: true,
       captureScreenshots: false,
     }
   },
-  
+
   /**
-   * Single format deep dive - all scenes, 1 format, all viewpoints
-   * For validating a specific compression method
+   * Single Format Deep Dive - Evaluate one format across all scenes
+   * Useful for validating a specific compression method
    */
   singleFormat: {
-    name: 'Single Format Evaluation',
-    description: 'Deep evaluation of one format across all scenes',
+    name: 'Single Format',
+    description: 'Deep evaluation of one format across all scenes. ~20-40 min.',
+    defaultScenes: ['bonsai', 'garden', 'playroom', 'truck', 'train', 'flower'],
+    defaultFormats: ['spz'], // User should select
+    viewpointCount: 5,
+    defaultReplicates: 3,
     defaultConfig: {
       testName: 'single-format',
       scenes: [],
@@ -142,26 +207,6 @@ export const BATCH_TEMPLATES = {
       captureQualityMetrics: true,
       capturePerformanceMetrics: true,
       captureScreenshots: true,
-    }
-  },
-  
-  /**
-   * Performance profiling - focus on FPS and memory
-   */
-  performanceProfiling: {
-    name: 'Performance Profiling',
-    description: 'Focus on FPS, load time, and memory across browsers',
-    defaultConfig: {
-      testName: 'performance-profile',
-      scenes: [],
-      referenceFormat: 'ply',
-      testFormats: ['splat', 'ksplat', 'spz'],
-      viewpoints: [], // Just front view
-      replicates: 5, // More replicates for stable FPS measurements
-      delayBetweenCaptures: 1000,
-      captureQualityMetrics: false,
-      capturePerformanceMetrics: true,
-      captureScreenshots: false,
     }
   },
 };

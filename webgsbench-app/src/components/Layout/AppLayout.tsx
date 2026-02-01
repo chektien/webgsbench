@@ -518,12 +518,40 @@ export function AppLayout() {
 
             {activeTab === 'batch' && (
               <div className="p-4">
-                <p className="text-xs text-gray-400 mb-2">
-                  Batch testing is currently in demo mode. Use "Single Test" for real metrics.
-                </p>
                 <BatchTestPanel
                   availableScenes={['bonsai', 'garden', 'playroom', 'truck', 'train', 'flower']}
                   onStartBatch={(config) => console.log('[Batch] Starting:', config)}
+                  onLoadFile={(file, side) => {
+                    if (side === 'B') {
+                      handleFileSelectB(file);
+                    } else {
+                      handleFileSelectA(file);
+                    }
+                  }}
+                  onGetContext={(side) => side === 'A' ? contextA : contextB}
+                  onGetMetrics={(side) => {
+                    const m = side === 'A' ? metricsA.getCurrentMetrics() : metricsB.getCurrentMetrics();
+                    return {
+                      fps: m.fps,
+                      loadTime: m.loadTime,
+                      memoryMB: m.memoryUsage,
+                      splatCount: m.splatCount,
+                      resolution: { width: m.resolution[0], height: m.resolution[1] }
+                    };
+                  }}
+                  onCaptureScreenshot={async (side) => {
+                    const ctx = side === 'A' ? contextA : contextB;
+                    if (!ctx) return null;
+                    const canvas = ctx.renderer.domElement;
+                    return canvas.toDataURL('image/png');
+                  }}
+                  onCompareQuality={async () => {
+                    if (contextA && contextB) {
+                      const result = await imageQuality.compareQuality(contextA, contextB);
+                      return result;
+                    }
+                    return { psnr: null, ssim: null };
+                  }}
                 />
               </div>
             )}
