@@ -1,30 +1,28 @@
-# WebGSBench: Multi-Paper Publication Strategy
+# WebGSBench: Research Project Plan
 
-**Last Updated**: 2026-01-16 (Three-Paper Strategy Finalized)  
-**Target Conferences**: SIGGRAPH Asia 2026 → CHI 2027 → SIGGRAPH 2027
+**Last Updated**: 2026-01-16  
+**Status**: Experimental research project exploring 3D Gaussian Splatting benchmarks
 
 ---
 
-## 📋 Publication Strategy
+## 📋 Research Exploration Areas
 
-This project follows a **three-paper strategy** to maximize impact across graphics and HCI communities:
+This project explores several research directions:
 
-1. **SIGGRAPH Asia 2026** (Dec 2026): Benchmarking foundation paper
-   - Focus: Objective metrics, performance benchmarks, framework
-   - Deadline: May 2026
+1. **Benchmarking Framework** - Objective metrics and performance evaluation
+   - Focus: Systematic comparison of 3DGS formats
+   - Metrics: File size, rendering performance, quality measures
 
-2. **CHI 2027** (Apr 2027): Arena Mode methodology paper
-   - Focus: Crowdsourced perceptual evaluation system
-   - Deadline: September 4, 2026
-   - See: **[ARENA_STRATEGY.md](./ARENA_STRATEGY.md)** for detailed strategy
+2. **Perceptual Evaluation Methodology** - Arena-style assessment approaches
+   - Focus: Crowdsourced perceptual evaluation systems
+   - See: **[ARENA_STRATEGY.md](./ARENA_STRATEGY.md)** for methodology exploration
 
-3. **SIGGRAPH 2027** (July 2027): Perceptual findings paper
-   - Focus: What humans prefer vs what metrics predict
-   - Deadline: February 2027
-   - Fallback: Combined paper if CHI rejects
+3. **Human vs Metrics Analysis** - Understanding perceptual preferences
+   - Focus: Correlation between objective metrics and human perception
+   - Approach: Comparative analysis of automated vs human evaluation
 
-**User Study**: MTurk-based crowdsourced evaluation (~540 HITs, $300 budget)
-- See: **[MTURK_STUDY.md](./MTURK_STUDY.md)** for detailed protocol
+**Experimental Study**: Exploratory user evaluation design
+- See: **[MTURK_STUDY.md](./MTURK_STUDY.md)** for study protocol drafts
 
 ---
 
