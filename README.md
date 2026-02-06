@@ -38,12 +38,6 @@ This project tested collaborative workflows between human researchers and AI cod
 
 **All AI-generated content requires human verification before use.**
 
-### Private Research Copy
-
-A private version of this repository exists for ongoing research development. This public version is sanitized and represents a snapshot of the experimental workflow.
-
----
-
 ## Technical Overview
 
 WebGSBench is a prototype benchmark framework for comparing 3D Gaussian Splatting formats and rendering approaches in web browsers. It includes:
