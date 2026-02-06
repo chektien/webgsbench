@@ -4,7 +4,7 @@
 
 set -e  # Exit on error
 
-ASSETS="/Users/chek/repos/webgsbench/assets"
+ASSETS="<REPO_ROOT>/assets"
 cd "$ASSETS"
 
 echo "=================================================="

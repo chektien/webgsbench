@@ -8,7 +8,7 @@
 
 set -e
 
-ASSETS_DIR="/Users/chek/repos/webgsbench/assets"
+ASSETS_DIR="<REPO_ROOT>/assets"
 GT_DIR="${ASSETS_DIR}/ground-truth"
 
 echo "=================================================="

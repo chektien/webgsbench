@@ -149,7 +149,7 @@ Location: After line 320 (after "Related Systems and Differentiation")
 
 ```bash
 # Open the paper
-vim /Users/chek/repos/webgsbench/main.tex
+vim <REPO_ROOT>/main.tex
 
 # Go to line 321 (before "Potential Challenges")
 # Insert contents of paper_scene_selection.tex

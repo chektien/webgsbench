@@ -206,7 +206,7 @@ I have completed a comprehensive research and documentation package for the WebG
 
 ## 📁 File Locations
 
-All documentation is in `/Users/chek/repos/webgsbench/`:
+All documentation is in `<REPO_ROOT>/`:
 
 ```
 Core Research:

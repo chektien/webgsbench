@@ -2,7 +2,7 @@
 
 ## Current Assets Summary
 
-You have **24 3DGS scenes** already downloaded in `/Users/chek/repos/webgsbench/assets/`
+You have **24 3DGS scenes** already downloaded in `<REPO_ROOT>/assets/`
 
 ### By Format
 

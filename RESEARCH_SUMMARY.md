@@ -272,7 +272,7 @@ Detailed analysis of recent papers including:
 
 ## 📁 Files Location
 
-All research documents are in `/Users/chek/repos/webgsbench/`:
+All research documents are in `<REPO_ROOT>/`:
 
 - `RESEARCH_SUMMARY.md` - This file (executive summary)
 - `IMPLEMENTATION_PLAN.md` - Detailed 7-day implementation plan

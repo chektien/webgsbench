@@ -133,7 +133,7 @@ Ask user which to prioritize:
 
 **Build Commands**:
 ```bash
-cd /Users/chek/repos/webgsbench
+cd <REPO_ROOT>
 pdflatex main.tex
 bibtex main
 pdflatex main.tex

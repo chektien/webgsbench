@@ -8,7 +8,7 @@ Completed setup and preparation for Day 1 data collection. Abstract is ready for
 ## ✅ Completed Tonight
 
 ### 1. AGENTS.md Updated
-**File**: `/Users/chek/repos/webgsbench/AGENTS.md`
+**File**: `<REPO_ROOT>/AGENTS.md`
 **Changes**: Added PDF compilation guidelines (Section 11 - "Compilation Best Practices")
 - ⚠️ **Don't recompile PDF after every .tex edit** (wastes time during drafting)
 - Only compile when: user asks, verifying final output, preparing submission, testing references
@@ -17,7 +17,7 @@ Completed setup and preparation for Day 1 data collection. Abstract is ready for
 **Impact**: Reduces unnecessary compilation overhead during rapid iteration
 
 ### 2. Data Collection Plan Created
-**File**: `/Users/chek/repos/webgsbench/DATA_COLLECTION_PLAN.md`
+**File**: `<REPO_ROOT>/DATA_COLLECTION_PLAN.md`
 **Content**:
 - Detailed test matrix (3 scenes × 3 formats × 5 viewpoints = 45 measurements)
 - Step-by-step procedure for systematic data collection
@@ -40,7 +40,7 @@ scene,format,viewpoint,psnr,ssim,file_size_mb,compression_ratio
 **Ready For**: Manual data entry during tomorrow's benchmarking session
 
 ### 4. Setup Verification Script
-**File**: `/Users/chek/repos/webgsbench/scripts/verify_setup.sh`
+**File**: `<REPO_ROOT>/scripts/verify_setup.sh`
 **Features**:
 - Checks all 12 benchmark files present
 - Verifies viewer service running
@@ -150,7 +150,7 @@ cannot capture. Code and data are publicly available.
 
 ## 🔧 Technical Environment
 
-### Repository: `/Users/chek/repos/webgsbench/`
+### Repository: `<REPO_ROOT>/`
 - **Assets**: 12 benchmark files (bonsai, truck, playroom × 4 formats)
 - **Viewer App**: React + TypeScript + Vite + @mkkellogg/gaussian-splats-3d
 - **Paper**: LaTeX (ACM TOG template, 6 pages)
@@ -294,7 +294,7 @@ cannot capture. Code and data are publicly available.
 
 ## 📞 Contact & Resources
 
-**Project Repository**: `/Users/chek/repos/webgsbench/`
+**Project Repository**: `<REPO_ROOT>/`
 **Viewer URL**: http://localhost:5174
 **Documentation**: See `DOCS_OVERVIEW.md` for navigation guide
 

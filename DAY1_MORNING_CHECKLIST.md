@@ -26,7 +26,7 @@ Code and data are publicly available.
 ### 2. Extract Plain Text Version
 Run this to get plain text (for web form):
 ```bash
-cd /Users/chek/repos/webgsbench
+cd <REPO_ROOT>
 grep -A 5 "begin{abstract}" main.tex | \
   grep -v "\\begin\|\\end" | \
   sed 's/\\cite{[^}]*}//g' | \
@@ -77,7 +77,7 @@ After abstract submission, test the viewer before data collection:
 
 ### 6. Start Viewer (if not running)
 ```bash
-cd /Users/chek/repos/webgsbench/webgsbench-app
+cd <REPO_ROOT>/webgsbench-app
 npm run dev
 ```
 
@@ -207,7 +207,7 @@ ls -lh assets/bonsai.{ply,splat}
 
 ## 📞 Quick Reference
 
-**Repository**: `/Users/chek/repos/webgsbench/`  
+**Repository**: `<REPO_ROOT>/`  
 **Viewer**: http://localhost:5174  
 **Abstract**: `main.tex` lines 23-25  
 **Data Plan**: `DATA_COLLECTION_PLAN.md`  

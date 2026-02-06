@@ -14,7 +14,7 @@
 
 ### ✅ Final Git Status
 ```
-Repository: github.com:chektien/webgsbench.git
+Repository: github.com:<USERNAME>/webgsbench.git
 Branch: main
 Status: Clean working tree (nothing to commit)
 Last Commit: 1b86cad - "Add screenshot showing WebGSBench interface"
@@ -261,7 +261,7 @@ Command to start: cd webgsbench-app && npm run dev
 ### Quick Commands
 ```bash
 # Navigate to app directory
-cd /Users/chek/repos/webgsbench/webgsbench-app
+cd <REPO_ROOT>/webgsbench-app
 
 # Start dev server
 npm run dev
@@ -344,7 +344,7 @@ Exceeds recommended maximum file size of 50.00 MB
 
 ### 1. Verify Current State
 ```bash
-cd /Users/chek/repos/webgsbench/webgsbench-app
+cd <REPO_ROOT>/webgsbench-app
 git status
 git log --oneline -3
 ```
@@ -356,7 +356,7 @@ git log --oneline -3
 
 ### 2. Start Dev Server
 ```bash
-cd /Users/chek/repos/webgsbench/webgsbench-app
+cd <REPO_ROOT>/webgsbench-app
 npm run dev
 # Opens at http://localhost:5173/
 ```
@@ -414,10 +414,10 @@ Based on previous session state (SESSION_STATE.md from Jan 16):
 
 ## 📞 Quick Reference
 
-**Repository:** https://github.com/chektien/webgsbench  
+**Repository:** https://github.com/<USERNAME>/webgsbench  
 **Dev Server:** http://localhost:5173/ (or 5174 if port conflict)  
-**Working Directory:** `/Users/chek/repos/webgsbench/`  
-**App Directory:** `/Users/chek/repos/webgsbench/webgsbench-app/`  
+**Working Directory:** `<REPO_ROOT>/`  
+**App Directory:** `<REPO_ROOT>/webgsbench-app/`  
 
 **Last Verified:** January 18, 2026 at 12:18 AM PST  
 **Status:** ✅ READY FOR RESEARCH AND DEVELOPMENT

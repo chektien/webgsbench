@@ -12,6 +12,7 @@ import { useMetrics } from '../../hooks/useMetrics';
 import { useImageQuality } from '../../hooks/useImageQuality';
 import { useCameraSync } from '../../hooks/useCameraSync';
 import { getScenePresets } from '../../lib/camera/cameraPresets';
+import { captureComparisonScreenshot, generateComparisonFilename, downloadScreenshot } from '../../lib/export/screenshot';
 
 // Scene detection from filename
 function detectSceneName(filename: string): string | null {
@@ -41,6 +42,8 @@ export function AppLayout() {
   const [cameraSyncEnabled] = useState(true);
   const [activeTab, setActiveTab] = useState<'metrics' | 'single' | 'batch' | 'export'>('metrics');
   const [showCameraPresets, setShowCameraPresets] = useState(true);
+  const [isCapturingScreenshot, setIsCapturingScreenshot] = useState(false);
+  const [screenshotStatus, setScreenshotStatus] = useState<string | null>(null);
 
   const metricsA = useMetrics();
   const metricsB = useMetrics();
@@ -57,6 +60,32 @@ export function AppLayout() {
     targetContext: contextB,
     enabled: cameraSyncEnabled && !!contextA && !!contextB,
   });
+
+  // Screenshot capture handler (independent of tabs)
+  const handleCaptureScreenshot = useCallback(async () => {
+    if (!contextA || !contextB) {
+      setScreenshotStatus('Load both splats first');
+      setTimeout(() => setScreenshotStatus(null), 3000);
+      return;
+    }
+    
+    setIsCapturingScreenshot(true);
+    setScreenshotStatus('Capturing...');
+    
+    try {
+      const blob = await captureComparisonScreenshot(contextA, contextB);
+      const filename = generateComparisonFilename(currentScene, 'current', new Date().toISOString());
+      downloadScreenshot(blob, filename);
+      setScreenshotStatus(`Saved: ${filename}`);
+      console.log('[Screenshot] Captured:', filename);
+    } catch (error) {
+      console.error('[Screenshot] Failed:', error);
+      setScreenshotStatus('Capture failed');
+    } finally {
+      setIsCapturingScreenshot(false);
+      setTimeout(() => setScreenshotStatus(null), 3000);
+    }
+  }, [contextA, contextB, currentScene]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -80,9 +109,8 @@ export function AppLayout() {
       
       // 'C' for screenshot capture
       if (e.key === 'c' || e.key === 'C') {
-        console.log('[Keyboard] Capture screenshot - implement export');
-        // Trigger export panel
-        setActiveTab('export');
+        console.log('[Keyboard] Capture screenshot');
+        handleCaptureScreenshot();
         return;
       }
       
@@ -114,7 +142,7 @@ export function AppLayout() {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [contextA, currentScene]);
+  }, [contextA, currentScene, handleCaptureScreenshot]);
 
   const handleFileSelectA = (file: GSFile) => {
     metricsA.reset();
@@ -314,7 +342,7 @@ export function AppLayout() {
             {/* File info top-left */}
             <div className="absolute top-4 left-4 z-20">
               <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(62, 62, 62, 0.9)', fontFamily: 'Arvo, serif' }}>
-                <div className="text-sm font-semibold mb-0.5" style={{ color: '#FFACBF' }}>Splat A</div>
+                <div className="text-sm font-semibold mb-0.5" style={{ color: '#FFACBF' }}>Splat A (reference)</div>
                 {fileA && (
                   <div className="text-sm truncate max-w-[200px]" title={fileA.name} style={{ color: '#FDFDFB' }}>
                     {fileA.name}
@@ -369,7 +397,7 @@ export function AppLayout() {
             {/* File info top-left */}
             <div className="absolute top-4 left-4 z-20">
               <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(62, 62, 62, 0.9)', fontFamily: 'Arvo, serif' }}>
-                <div className="text-sm font-semibold mb-0.5" style={{ color: '#FFACBF' }}>Splat B</div>
+                <div className="text-sm font-semibold mb-0.5" style={{ color: '#FFACBF' }}>Splat B (test)</div>
                 {fileB && (
                   <div className="text-sm truncate max-w-[200px]" title={fileB.name} style={{ color: '#FDFDFB' }}>
                     {fileB.name}
@@ -433,6 +461,42 @@ export function AppLayout() {
               <CameraDistance context={contextA} />
             </div>
           )}
+
+          {/* Screenshot Button - Independent of tabs */}
+          {(fileA && fileB) && (
+            <div className="absolute bottom-4 right-4" style={{ zIndex: 30 }}>
+              <div className="flex flex-col items-end gap-2">
+                {screenshotStatus && (
+                  <div 
+                    className="px-3 py-2 rounded-lg text-xs"
+                    style={{ 
+                      backgroundColor: 'rgba(62, 62, 62, 0.95)', 
+                      color: screenshotStatus.includes('failed') ? '#FF575F' : '#4ADE80',
+                      fontFamily: 'Arvo, serif'
+                    }}
+                  >
+                    {screenshotStatus}
+                  </div>
+                )}
+                <button
+                  onClick={handleCaptureScreenshot}
+                  disabled={isCapturingScreenshot || !contextA || !contextB}
+                  className="px-4 py-3 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  style={{ 
+                    backgroundColor: isCapturingScreenshot ? '#6B7280' : '#B39DFF', 
+                    fontFamily: 'Arvo, serif' 
+                  }}
+                  title="Capture side-by-side screenshot (C)"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                  {isCapturingScreenshot ? 'Capturing...' : 'Screenshot'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Panel - Tabbed Interface */}
@@ -477,7 +541,7 @@ export function AppLayout() {
             {activeTab === 'single' && (
               <div className="p-4">
                 <SingleTestPanel
-                  availableScenes={['bonsai', 'garden', 'playroom', 'truck', 'train', 'flower']}
+                  availableScenes={['bonsai']}
                   availableFormats={['splat', 'ksplat', 'spz']}
                   onLoadFile={(file, side) => {
                     if (side === 'B') {
@@ -519,7 +583,7 @@ export function AppLayout() {
             {activeTab === 'batch' && (
               <div className="p-4">
                 <BatchTestPanel
-                  availableScenes={['bonsai', 'garden', 'playroom', 'truck', 'train', 'flower']}
+                  availableScenes={['bonsai']}
                   onStartBatch={(config) => console.log('[Batch] Starting:', config)}
                   onLoadFile={(file, side) => {
                     if (side === 'B') {

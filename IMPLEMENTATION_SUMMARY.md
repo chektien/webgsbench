@@ -135,7 +135,7 @@ New sections added:
 ### Option A: Convert Remaining Scenes (Recommended)
 Run batch conversion:
 ```bash
-cd /Users/chek/repos/webgsbench
+cd <REPO_ROOT>
 ./scripts/convert_scene.sh --batch-all
 ```
 

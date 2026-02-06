@@ -77,7 +77,7 @@
 
 ```bash
 # 1. Check everything is ready
-cd /Users/chek/repos/webgsbench
+cd <REPO_ROOT>
 ./scripts/verify_setup.sh
 
 # 2. Start viewer if not running

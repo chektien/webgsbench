@@ -600,7 +600,7 @@ bonsai,ply,Firefox,1.4,58,43,115
 
 **Check paper compiles**:
 ```bash
-cd /Users/chek/repos/webgsbench
+cd <REPO_ROOT>
 pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex main.tex
 ```
 

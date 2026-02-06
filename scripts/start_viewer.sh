@@ -5,7 +5,7 @@
 
 set -e
 
-VIEWER_DIR="/Users/chek/repos/webgsbench/webgsbench-app"
+VIEWER_DIR="<REPO_ROOT>/webgsbench-app"
 
 echo "=================================================="
 echo "WebGSBench Viewer - Quick Start"

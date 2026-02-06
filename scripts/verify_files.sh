@@ -5,7 +5,7 @@
 
 set -e
 
-ASSETS_DIR="/Users/chek/repos/webgsbench/assets"
+ASSETS_DIR="<REPO_ROOT>/assets"
 
 echo "=================================================="
 echo "WebGSBench File Verification"

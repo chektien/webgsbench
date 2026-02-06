@@ -292,8 +292,8 @@ Before starting data collection:
 
 - **Dev Server**: Running on `http://localhost:5173/`
 - **Browser**: Chrome with DevTools
-- **Repository**: `/Users/chek/repos/webgsbench/`
-- **Remote**: `github.com:chektien/webgsbench.git` (synced)
+- **Repository**: `<REPO_ROOT>/`
+- **Remote**: `github.com:<USERNAME>/webgsbench.git` (synced)
 
 ---
 

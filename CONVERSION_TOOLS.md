@@ -173,7 +173,7 @@ npm install -g @playcanvas/splat-transform
 
 ### 3. Download gsbox (Fast Binary Backup)
 ```bash
-cd /Users/chek/repos/webgsbench/tools
+cd <REPO_ROOT>/tools
 curl -L -o gsbox https://github.com/gotoeasy/gsbox/releases/latest/download/gsbox-macos
 chmod +x gsbox
 ```
@@ -243,7 +243,7 @@ Create `scripts/convert_all.sh`:
 #!/bin/bash
 # Convert all benchmark scenes to all formats
 
-ASSETS="/Users/chek/repos/webgsbench/assets"
+ASSETS="<REPO_ROOT>/assets"
 cd "$ASSETS"
 
 echo "Converting bonsai..."
